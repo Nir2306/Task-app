@@ -1,0 +1,98 @@
+.network-status {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 1000;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+.network-status.online {
+  background-color: #10b981;
+  color: white;
+}
+
+.network-status.offline {
+  background-color: #f59e0b;
+  color: white;
+}
+
+.network-status-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.network-icon {
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.network-text {
+  white-space: nowrap;
+}
+
+.network-pending {
+  font-size: 0.75rem;
+  opacity: 0.9;
+  white-space: nowrap;
+}
+
+.network-sync-btn {
+  background-color: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+}
+
+.network-sync-btn:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.network-sync-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Dark mode */
+.dark-mode .network-status.online {
+  background-color: #059669;
+}
+
+.dark-mode .network-status.offline {
+  background-color: #d97706;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .network-status {
+    top: 5px;
+    right: 5px;
+    padding: 6px 10px;
+    font-size: 0.75rem;
+  }
+
+  .network-status-content {
+    gap: 6px;
+  }
+
+  .network-pending {
+    font-size: 0.7rem;
+  }
+
+  .network-sync-btn {
+    padding: 3px 6px;
+    font-size: 0.7rem;
+  }
+}
+
