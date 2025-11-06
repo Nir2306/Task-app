@@ -173,7 +173,7 @@ function TaskList({ tasks, onDeleteTask, onEditTask }) {
                   </div>
                   <div className="task-details">
                     <div className="detail-item">
-                      <span className="detail-label">📅 Date:</span>
+                      <span className="detail-label">Date:</span>
                       <span>{new Date(task.date).toLocaleDateString('en-US', { 
                         weekday: 'short', 
                         year: 'numeric', 

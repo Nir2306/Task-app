@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react'
+import ReactQuill from 'react-quill'
+import 'react-quill/dist/quill.snow.css'
 import { hybridNotes } from '../utils/offlineStorage'
 import './StandaloneNotes.css'
 
@@ -124,12 +126,14 @@ function StandaloneNotes({ tasks = [] }) {
   }, [notes])
 
   const handleAddNote = () => {
-    if (newNote.trim()) {
+    // Remove HTML tags to check if note has content
+    const textContent = newNote.replace(/<[^>]*>/g, '').trim()
+    if (textContent) {
       const linkedTask = selectedTaskId ? tasks.find(t => t.id === parseInt(selectedTaskId)) : null
       const note = {
         id: Date.now(),
         title: newNoteTitle.trim() || 'Untitled Note',
-        text: newNote.trim(),
+        text: newNote,
         category: selectedCategory,
         tag: selectedTag || null,
         linkedTask: linkedTask ? {
@@ -166,7 +170,9 @@ function StandaloneNotes({ tasks = [] }) {
   }
 
   const handleSaveEdit = () => {
-    if (editNoteText.trim()) {
+    // Remove HTML tags to check if note has content
+    const textContent = editNoteText.replace(/<[^>]*>/g, '').trim()
+    if (textContent) {
       const finalCategory = selectedCategory === 'custom' && customCategory.trim() 
         ? customCategory.trim() 
         : selectedCategory
@@ -177,7 +183,7 @@ function StandaloneNotes({ tasks = [] }) {
         note.id === editingNoteId
           ? { 
               ...note, 
-              text: editNoteText.trim(), 
+              text: editNoteText, 
               title: editNoteTitle.trim() || 'Untitled Note', 
               category: finalCategory,
               linkedTask: linkedTask ? {
@@ -395,15 +401,35 @@ function StandaloneNotes({ tasks = [] }) {
               </select>
             </div>
           )}
-          <textarea
-            value={newNote}
-            onChange={(e) => setNewNote(e.target.value)}
-            placeholder="Write your note here... Use **bold**, *italic*, `code`, or new lines"
-            className="note-textarea"
-            rows="8"
-          />
+          <div className="rich-text-editor-wrapper">
+            <ReactQuill
+              theme="snow"
+              value={newNote}
+              onChange={setNewNote}
+              placeholder="Write your note here..."
+              modules={{
+                toolbar: [
+                  [{ 'header': [1, 2, 3, false] }],
+                  ['bold', 'italic', 'underline', 'strike'],
+                  [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                  [{ 'color': [] }, { 'background': [] }],
+                  [{ 'align': [] }],
+                  ['link'],
+                  ['clean']
+                ]
+              }}
+              formats={[
+                'header',
+                'bold', 'italic', 'underline', 'strike',
+                'list', 'bullet',
+                'color', 'background',
+                'align',
+                'link'
+              ]}
+            />
+          </div>
           <div className="note-form-actions">
-            <button onClick={handleAddNote} className="save-btn" disabled={!newNote.trim()}>
+            <button onClick={handleAddNote} className="save-btn" disabled={!newNote.replace(/<[^>]*>/g, '').trim()}>
               Save Note
             </button>
             <button onClick={() => {
@@ -422,7 +448,7 @@ function StandaloneNotes({ tasks = [] }) {
       )}
 
       {/* Notes List */}
-      {filteredAndSortedNotes.length === 0 ? (
+      {!showAddNote && filteredAndSortedNotes.length === 0 && (
         <div className="empty-notes">
           {notes.length === 0 ? (
             <p>No notes yet. Click "New Note" to create your first note!</p>
@@ -430,7 +456,8 @@ function StandaloneNotes({ tasks = [] }) {
             <p>No notes match your search criteria.</p>
           )}
         </div>
-      ) : (
+      )}
+      {!showAddNote && filteredAndSortedNotes.length > 0 && (
         <div className="notes-list-container">
           {/* Pinned Notes */}
           {pinnedNotes.length > 0 && (
@@ -612,12 +639,33 @@ function NoteCard({
             </select>
           </div>
         )}
-        <textarea
-          value={editNoteText}
-          onChange={(e) => setEditNoteText(e.target.value)}
-          className="edit-textarea"
-          rows="6"
-        />
+        <div className="rich-text-editor-wrapper">
+          <ReactQuill
+            theme="snow"
+            value={editNoteText}
+            onChange={setEditNoteText}
+            placeholder="Edit your note..."
+            modules={{
+              toolbar: [
+                [{ 'header': [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                [{ 'color': [] }, { 'background': [] }],
+                [{ 'align': [] }],
+                ['link'],
+                ['clean']
+              ]
+            }}
+            formats={[
+              'header',
+              'bold', 'italic', 'underline', 'strike',
+              'list', 'bullet',
+              'color', 'background',
+              'align',
+              'link'
+            ]}
+          />
+        </div>
         <div className="note-edit-actions">
                       <button onClick={onSaveEdit} className="save-btn-small">Save</button>
                       <button onClick={onCancelEdit} className="cancel-btn-small">Cancel</button>

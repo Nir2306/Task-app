@@ -1,36 +1,59 @@
 /**
  * Database Service
  * Uses IndexedDB for reliable persistent storage with localStorage as fallback
+ * User-specific: Each user gets their own database
  */
 
-const DB_NAME = 'TimesheetTrackerDB'
+import { auth } from './firebase'
+
+// Get user-specific database name
+const getDBName = () => {
+  const userId = auth.currentUser?.uid
+  if (!userId) {
+    // Fallback for when user is not logged in (shouldn't happen in normal flow)
+    return 'TimesheetTrackerDB_guest'
+  }
+  return `TimesheetTrackerDB_${userId}`
+}
+
 const DB_VERSION = 1
 const TASKS_STORE = 'tasks'
 const NOTES_STORE = 'notes'
 const FAVORITES_STORE = 'favorites'
 
 let db = null
+let currentDBName = null
 
 /**
- * Initialize IndexedDB
+ * Initialize IndexedDB (user-specific)
  */
 export const initDB = () => {
   return new Promise((resolve, reject) => {
-    if (db) {
+    const dbName = getDBName()
+    
+    // If database name changed (user switched), close old connection
+    if (db && currentDBName !== dbName) {
+      db.close()
+      db = null
+      currentDBName = null
+    }
+    
+    if (db && currentDBName === dbName) {
       resolve(db)
       return
     }
 
-    const request = indexedDB.open(DB_NAME, DB_VERSION)
+    const request = indexedDB.open(dbName, DB_VERSION)
+    
+    request.onsuccess = () => {
+      db = request.result
+      currentDBName = dbName
+      resolve(db)
+    }
 
     request.onerror = () => {
       console.warn('IndexedDB not available, using localStorage fallback')
       reject(new Error('IndexedDB not available'))
-    }
-
-    request.onsuccess = () => {
-      db = request.result
-      resolve(db)
     }
 
     request.onupgradeneeded = (event) => {
@@ -64,11 +87,20 @@ const isIndexedDBAvailable = () => {
 }
 
 /**
- * Fallback to localStorage
+ * Fallback to localStorage (user-specific)
  */
+const getLocalStorageKey = (baseKey) => {
+  const userId = auth.currentUser?.uid
+  if (!userId) {
+    return `${baseKey}_guest`
+  }
+  return `${baseKey}_${userId}`
+}
+
 const getFromLocalStorage = (key) => {
   try {
-    const item = localStorage.getItem(key)
+    const userKey = getLocalStorageKey(key)
+    const item = localStorage.getItem(userKey)
     return item ? JSON.parse(item) : null
   } catch (error) {
     console.error('Error reading from localStorage:', error)
@@ -78,7 +110,8 @@ const getFromLocalStorage = (key) => {
 
 const setToLocalStorage = (key, value) => {
   try {
-    localStorage.setItem(key, JSON.stringify(value))
+    const userKey = getLocalStorageKey(key)
+    localStorage.setItem(userKey, JSON.stringify(value))
     return true
   } catch (error) {
     console.error('Error writing to localStorage:', error)

@@ -14,8 +14,8 @@ export default defineConfig({
         type: 'module'
       },
       manifest: {
-        name: 'Timesheet Tracker',
-        short_name: 'Timesheet',
+        name: 'Task Tracker',
+        short_name: 'Task Tracker',
         description: 'Track your daily activities and time efficiently',
         theme_color: '#0a1929',
         background_color: '#0a1929',

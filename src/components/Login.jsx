@@ -9,10 +9,20 @@ import {
   GoogleAuthProvider
 } from 'firebase/auth'
 import { auth } from '../utils/firebase'
+import Lottie from 'lottie-react'
 import './Login.css'
 
 function Login({ onLogin }) {
   const { darkMode } = useTheme()
+  const [noInternetAnimation, setNoInternetAnimation] = useState(null)
+
+  // Load Lottie animation JSON
+  useEffect(() => {
+    fetch('/No Internet Connection.json')
+      .then(res => res.json())
+      .then(data => setNoInternetAnimation(data))
+      .catch(err => console.error('Error loading animation:', err))
+  }, [])
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -26,6 +36,21 @@ function Login({ onLogin }) {
   const [passwordError, setPasswordError] = useState('')
   const [needsVerification, setNeedsVerification] = useState(false)
   const [verificationEmailSent, setVerificationEmailSent] = useState(false)
+  const [isOffline, setIsOffline] = useState(!navigator.onLine)
+
+  // Monitor online/offline status
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false)
+    const handleOffline = () => setIsOffline(true)
+    
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+    
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [])
 
   // Add class to body to hide scrollbar and remove padding
   useEffect(() => {
@@ -88,6 +113,14 @@ function Login({ onLogin }) {
     setError('')
     setPasswordError('')
     setEmailVerified(false)
+    setNeedsVerification(false)
+    setVerificationEmailSent(false)
+    
+    // Check if offline
+    if (isOffline) {
+      setError('You are currently offline. Please connect to the internet to sign in. If you were previously logged in, try refreshing the page.')
+      return
+    }
     
     // Validate email format
     if (!validateEmailFormat(email.trim())) {
@@ -375,6 +408,13 @@ function Login({ onLogin }) {
     try {
       setIsLoading(true)
       setError('')
+      
+      // Check if offline
+      if (isOffline) {
+        setIsLoading(false)
+        setError('You are currently offline. Please connect to the internet to sign in with Google.')
+        return
+      }
 
       const provider = new GoogleAuthProvider()
       const result = await signInWithPopup(auth, provider)
@@ -397,6 +437,31 @@ function Login({ onLogin }) {
         setError('Failed to sign in with Google. Please try again.')
       }
     }
+  }
+
+  // Show full-page offline view when offline
+  if (isOffline) {
+    return (
+      <div className={`offline-page ${darkMode ? 'dark-mode' : ''}`}>
+        <div className="offline-page-content">
+          <div className="offline-animation-container">
+            {noInternetAnimation ? (
+              <Lottie 
+                animationData={noInternetAnimation}
+                loop={true}
+                className="offline-animation-lottie"
+              />
+            ) : (
+              <div className="offline-animation-placeholder">Loading...</div>
+            )}
+          </div>
+          <h1 className="offline-title">No Internet Connection</h1>
+          <p className="offline-description">
+            You're currently offline. Please check your internet connection and try again.
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -424,7 +489,7 @@ function Login({ onLogin }) {
         <div className="login-form-section">
           <div className="login-card">
             <div className="login-header">
-              <h1>Timesheet Tracker</h1>
+              <h1>Task Tracker</h1>
               <p>Welcome back! Please sign in to continue.</p>
             </div>
 
@@ -445,7 +510,7 @@ function Login({ onLogin }) {
                     </div>
                     <p className="verification-message">
                       {emailVerified 
-                        ? `A verification email has been sent to ${email}. Please check your inbox (and spam folder) and click the verification link to activate your account.`
+                        ? `A verification email has been sent to ${email}.`
                         : `Your email address (${email}) has not been verified. Please verify your email to access your account.`
                       }
                     </p>
@@ -456,25 +521,15 @@ function Login({ onLogin }) {
                           <li>Check your spam/junk folder</li>
                           <li>Wait 2-5 minutes (emails can be delayed)</li>
                           <li>Verify the email address is correct</li>
-                          <li>Check browser console (F12) for errors</li>
-                          <li>Ensure Firebase Console is configured (see README)</li>
                         </ul>
                       </div>
                     )}
                     {verificationEmailSent && (
                       <div className="verification-sent-message">
-                        ✓ Verification email sent! Please check your inbox.
+                        ✓ Verification email sent!
                       </div>
                     )}
                     <div className="verification-actions">
-                      <button
-                        type="button"
-                        onClick={handleCheckVerification}
-                        className="check-verification-btn"
-                        disabled={isLoading}
-                      >
-                        {isLoading ? 'Checking...' : 'Check Verification Status'}
-                      </button>
                       <button
                         type="button"
                         onClick={handleResendVerification}
@@ -513,10 +568,10 @@ function Login({ onLogin }) {
                     setEmailVerified(false)
                   }}
                   placeholder="Enter your email"
-                  className="form-input"
-                  autoComplete="email"
-                  disabled={isLoading || needsVerification}
-                />
+                      className="form-input"
+                      autoComplete="email"
+                      disabled={isLoading || needsVerification || isOffline}
+                    />
               </div>
 
               <div className="form-group">
@@ -534,13 +589,13 @@ function Login({ onLogin }) {
                     placeholder="Enter your password"
                     className="form-input"
                     autoComplete="current-password"
-                    disabled={isLoading || needsVerification}
+                        disabled={isLoading || needsVerification || isOffline}
                   />
                   <button
                     type="button"
                     className="password-toggle-btn"
                     onClick={() => setShowPassword(!showPassword)}
-                    disabled={isLoading || needsVerification}
+                        disabled={isLoading || needsVerification || isOffline}
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? (
@@ -566,23 +621,23 @@ function Login({ onLogin }) {
 
               {!needsVerification && (
                 <>
-                  <button 
-                    type="submit" 
-                    className="login-btn"
-                    disabled={isLoading}
-                  >
-                    Sign In
-                  </button>
+                      <button 
+                        type="submit" 
+                        className="login-btn"
+                        disabled={isLoading || isOffline}
+                      >
+                        Sign In
+                      </button>
 
                   <div className="forgot-password-link">
                     <button
                       type="button"
                       onClick={() => setShowForgotPassword(true)}
-                      className="forgot-password-btn"
-                      disabled={isLoading}
-                    >
-                      Forgot Password?
-                    </button>
+                        className="forgot-password-btn"
+                        disabled={isLoading || isOffline}
+                      >
+                        Forgot Password?
+                      </button>
                   </div>
                 </>
               )}
@@ -596,12 +651,12 @@ function Login({ onLogin }) {
             {/* Google Sign-In Button */}
             {!needsVerification && (
               <div className="google-signin-container">
-                <button
-                  type="button"
-                  onClick={handleGoogleSignIn}
-                  className="google-signin-btn"
-                  disabled={isLoading}
-                >
+                    <button
+                      type="button"
+                      onClick={handleGoogleSignIn}
+                      className="google-signin-btn"
+                      disabled={isLoading || isOffline}
+                    >
                 <svg className="google-icon" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                   <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -706,7 +761,7 @@ function Login({ onLogin }) {
                   </div>
                 )}
                 <button type="submit" className="reset-btn">
-                  Send Reset Link
+                  Reset My Password
                 </button>
               </form>
             )}

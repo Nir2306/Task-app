@@ -13,10 +13,22 @@ import { hybridTasks, initializeOfflineStorage } from './utils/offlineStorage'
 import { migrateToFirestore } from './utils/firestore'
 import './App.css'
 
+// Check if there's a persisted Firebase auth session
+const hasPersistedAuthState = () => {
+  try {
+    // Firebase Auth stores session data in localStorage with keys like:
+    // firebase:authUser:[API_KEY]:[PROJECT_ID] or similar patterns
+    const keys = Object.keys(localStorage)
+    return keys.some(key => key.includes('firebase') && key.includes('auth'))
+  } catch (error) {
+    return false
+  }
+}
+
 function AppContent() {
   const [tasks, setTasks] = useState([])
   const [activeTab, setActiveTab] = useState('entry')
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(hasPersistedAuthState()) // Only show loading if there's a persisted session
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [username, setUsername] = useState('')
   const [showLogoutModal, setShowLogoutModal] = useState(false)
@@ -87,7 +99,7 @@ function AppContent() {
           console.error('Error during migration:', error)
         }
         
-        // Load tasks from hybrid storage (works offline)
+        // Load tasks from hybrid storage (works offline, user-specific)
         try {
           const savedTasks = await hybridTasks.getAll()
           setTasks(savedTasks || [])
@@ -98,6 +110,7 @@ function AppContent() {
           setIsLoading(false)
         }
       } else {
+        // User logged out - clear all data
         setIsAuthenticated(false)
         setUsername('')
         setTasks([])
@@ -167,24 +180,37 @@ function AppContent() {
     setIsMobileMenuOpen(false) // Close menu when tab changes
   }
 
-  // Show login page if not authenticated
+  // Show loading state first (while checking authentication)
+  if (isLoading) {
+    return (
+      <div className={`app ${darkMode ? 'dark-mode' : ''}`}>
+        <div className="loading-container">
+          <div className="clock-loader">
+            <div className="clock-face">
+              {/* Hour markers */}
+              {[12, 3, 6, 9].map((hour) => (
+                <div key={hour} className={`clock-marker marker-${hour}`}></div>
+              ))}
+              {/* Hour hand */}
+              <div className="clock-hand hour-hand"></div>
+              {/* Minute hand */}
+              <div className="clock-hand minute-hand"></div>
+              {/* Center dot */}
+              <div className="clock-center"></div>
+            </div>
+          </div>
+          <p className="loading-text">Loading Task Tracker...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show login page if not authenticated (only after loading is complete)
   if (!isAuthenticated) {
     return (
       <ThemeProvider>
         <Login onLogin={handleLogin} />
       </ThemeProvider>
-    )
-  }
-
-  // Show loading state
-  if (isLoading) {
-    return (
-      <div className={`app ${darkMode ? 'dark-mode' : ''}`}>
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p className="loading-text">Loading...</p>
-        </div>
-      </div>
     )
   }
 
@@ -194,15 +220,17 @@ function AppContent() {
       <header className="app-header">
         <div className="header-content">
           <div className="header-left">
-            <button 
-              className="hamburger-menu-btn"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              aria-label="Toggle menu"
-            >
-              <span className={`hamburger-line ${isMobileMenuOpen ? 'open' : ''}`}></span>
-              <span className={`hamburger-line ${isMobileMenuOpen ? 'open' : ''}`}></span>
-              <span className={`hamburger-line ${isMobileMenuOpen ? 'open' : ''}`}></span>
-            </button>
+            {!isMobileMenuOpen && (
+              <button 
+                className="hamburger-menu-btn"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                aria-label="Toggle menu"
+              >
+                <span className="hamburger-line"></span>
+                <span className="hamburger-line"></span>
+                <span className="hamburger-line"></span>
+              </button>
+            )}
             <div className="header-title-section">
               <h1>Timesheet Tracker</h1>
               <p className="header-subtitle">Track your daily activities and time</p>
@@ -216,7 +244,7 @@ function AppContent() {
           <div className="header-right">
             <button 
               onClick={handleLogoutClick} 
-              className="logout-btn"
+              className="logout-btn desktop-logout-btn"
               title="Log out"
             >
               Logout
@@ -325,6 +353,13 @@ function AppContent() {
               aria-current={activeTab === 'notes' ? 'page' : undefined}
             >
               <span className="nav-label">Notes</span>
+            </button>
+            <button 
+              className="mobile-nav-item mobile-logout-btn"
+              onClick={handleLogoutClick}
+              aria-label="Logout"
+            >
+              <span className="nav-label">Logout</span>
             </button>
           </div>
           <div className="mobile-nav-footer">

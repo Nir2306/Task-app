@@ -8,8 +8,18 @@ import { dbTasks, dbNotes, dbFavorites, initDB } from './database'
 import { firestoreTasks, firestoreNotes, firestoreFavorites } from './firestore'
 import { auth } from './firebase'
 
-const SYNC_QUEUE_KEY = 'syncQueue'
-const LAST_SYNC_KEY = 'lastSync'
+// Get user-specific keys for sync queue
+const getSyncQueueKey = () => {
+  const userId = auth.currentUser?.uid
+  if (!userId) return 'syncQueue_guest'
+  return `syncQueue_${userId}`
+}
+
+const getLastSyncKey = () => {
+  const userId = auth.currentUser?.uid
+  if (!userId) return 'lastSync_guest'
+  return `lastSync_${userId}`
+}
 
 /**
  * Network Detection
@@ -23,7 +33,8 @@ export const isOnline = () => {
  */
 export const getSyncQueue = () => {
   try {
-    const queue = localStorage.getItem(SYNC_QUEUE_KEY)
+    const queueKey = getSyncQueueKey()
+    const queue = localStorage.getItem(queueKey)
     return queue ? JSON.parse(queue) : []
   } catch (error) {
     console.error('Error reading sync queue:', error)
@@ -39,7 +50,8 @@ const addToSyncQueue = (operation) => {
       timestamp: Date.now(),
       id: `${operation.type}_${Date.now()}_${Math.random()}`
     })
-    localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(queue))
+    const queueKey = getSyncQueueKey()
+    localStorage.setItem(queueKey, JSON.stringify(queue))
     return queue.length
   } catch (error) {
     console.error('Error adding to sync queue:', error)
@@ -49,7 +61,8 @@ const addToSyncQueue = (operation) => {
 
 const clearSyncQueue = () => {
   try {
-    localStorage.removeItem(SYNC_QUEUE_KEY)
+    const queueKey = getSyncQueueKey()
+    localStorage.removeItem(queueKey)
   } catch (error) {
     console.error('Error clearing sync queue:', error)
   }
@@ -103,13 +116,15 @@ export const processSyncQueue = async () => {
   // Clear queue only if all operations succeeded
   if (results.failed === 0) {
     clearSyncQueue()
-    localStorage.setItem(LAST_SYNC_KEY, Date.now().toString())
+    const lastSyncKey = getLastSyncKey()
+    localStorage.setItem(lastSyncKey, Date.now().toString())
   } else {
     // Keep failed operations in queue for retry
     const failedOps = queue.filter((op, idx) => {
       return results.errors.some(err => err.operation.id === op.id)
     })
-    localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(failedOps))
+    const queueKey = getSyncQueueKey()
+    localStorage.setItem(queueKey, JSON.stringify(failedOps))
   }
 
   return results
@@ -132,7 +147,8 @@ export const hybridTasks = {
           
           // Merge: prefer local if newer, otherwise use cloud
           if (cloudTasks.length > 0) {
-            const lastSync = localStorage.getItem(LAST_SYNC_KEY)
+            const lastSyncKey = getLastSyncKey()
+            const lastSync = localStorage.getItem(lastSyncKey)
             const localLastModified = localTasks.length > 0 
               ? Math.max(...localTasks.map(t => t.lastModified || t.id))
               : 0
@@ -165,7 +181,8 @@ export const hybridTasks = {
       if (isOnline() && auth.currentUser) {
         try {
           await firestoreTasks.saveAll(tasks)
-          localStorage.setItem(LAST_SYNC_KEY, Date.now().toString())
+          const lastSyncKey = getLastSyncKey()
+          localStorage.setItem(lastSyncKey, Date.now().toString())
         } catch (error) {
           console.warn('Error saving to Firestore, queueing for sync:', error)
           // Queue for later sync
@@ -196,7 +213,8 @@ export const hybridNotes = {
           const cloudNotes = await firestoreNotes.getAll()
           
           if (cloudNotes.length > 0) {
-            const lastSync = localStorage.getItem(LAST_SYNC_KEY)
+            const lastSyncKey = getLastSyncKey()
+            const lastSync = localStorage.getItem(lastSyncKey)
             if (!lastSync || cloudNotes.length > localNotes.length) {
               await dbNotes.saveAll(cloudNotes)
               return cloudNotes
@@ -222,7 +240,8 @@ export const hybridNotes = {
       if (isOnline() && auth.currentUser) {
         try {
           await firestoreNotes.saveAll(notes)
-          localStorage.setItem(LAST_SYNC_KEY, Date.now().toString())
+          const lastSyncKey = getLastSyncKey()
+          localStorage.setItem(lastSyncKey, Date.now().toString())
         } catch (error) {
           console.warn('Error saving notes to Firestore, queueing for sync:', error)
           addToSyncQueue({ type: 'saveNotes', data: notes })
@@ -251,7 +270,8 @@ export const hybridFavorites = {
           const cloudFavorites = await firestoreFavorites.getAll()
           
           if (cloudFavorites.length > 0) {
-            const lastSync = localStorage.getItem(LAST_SYNC_KEY)
+            const lastSyncKey = getLastSyncKey()
+            const lastSync = localStorage.getItem(lastSyncKey)
             if (!lastSync || cloudFavorites.length > localFavorites.length) {
               await dbFavorites.saveAll(cloudFavorites)
               return cloudFavorites
@@ -277,7 +297,8 @@ export const hybridFavorites = {
       if (isOnline() && auth.currentUser) {
         try {
           await firestoreFavorites.saveAll(favorites)
-          localStorage.setItem(LAST_SYNC_KEY, Date.now().toString())
+          const lastSyncKey = getLastSyncKey()
+          localStorage.setItem(lastSyncKey, Date.now().toString())
         } catch (error) {
           console.warn('Error saving favorites to Firestore, queueing for sync:', error)
           addToSyncQueue({ type: 'saveFavorites', data: favorites })

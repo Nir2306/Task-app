@@ -350,6 +350,116 @@
   font-weight: 600;
 }
 
+.rich-text-editor-wrapper {
+  margin-bottom: 15px;
+  background: white;
+  border-radius: 8px;
+}
+
+.dark-mode .rich-text-editor-wrapper {
+  background: #1e293b;
+}
+
+.rich-text-editor-wrapper .ql-container {
+  min-height: 200px;
+  font-size: 1rem;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.rich-text-editor-wrapper .ql-editor {
+  min-height: 200px;
+  color: #333;
+}
+
+.dark-mode .rich-text-editor-wrapper .ql-editor {
+  color: #ffffff;
+}
+
+/* Fix heading visibility in dark mode - make them brighter */
+.dark-mode .rich-text-editor-wrapper .ql-editor h1 {
+  color: #ffffff !important;
+  font-weight: 700;
+}
+
+.dark-mode .rich-text-editor-wrapper .ql-editor h2 {
+  color: #f0f0f0 !important;
+  font-weight: 600;
+}
+
+.dark-mode .rich-text-editor-wrapper .ql-editor h3 {
+  color: #e8e8e8 !important;
+  font-weight: 600;
+}
+
+/* Placeholder styling to match other inputs */
+.rich-text-editor-wrapper .ql-editor.ql-blank::before {
+  color: #6c757d;
+  font-style: normal;
+  opacity: 1;
+}
+
+.dark-mode .rich-text-editor-wrapper .ql-editor.ql-blank::before {
+  color: #94a3b8;
+  opacity: 1;
+}
+
+.rich-text-editor-wrapper .ql-toolbar {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  border: 2px solid #dee2e6;
+  background: #f8f9fa;
+}
+
+.dark-mode .rich-text-editor-wrapper .ql-toolbar {
+  border-color: #334155;
+  background: #0f172a;
+}
+
+.rich-text-editor-wrapper .ql-toolbar .ql-stroke {
+  stroke: #333;
+}
+
+.dark-mode .rich-text-editor-wrapper .ql-toolbar .ql-stroke {
+  stroke: #e0e0e0;
+}
+
+.rich-text-editor-wrapper .ql-toolbar .ql-fill {
+  fill: #333;
+}
+
+.dark-mode .rich-text-editor-wrapper .ql-toolbar .ql-fill {
+  fill: #e0e0e0;
+}
+
+/* Make dropdown text (like "Normal") more visible in dark mode */
+.dark-mode .rich-text-editor-wrapper .ql-toolbar .ql-picker-label {
+  color: #ffffff !important;
+}
+
+.dark-mode .rich-text-editor-wrapper .ql-toolbar .ql-picker-label:hover {
+  color: #60a5fa !important;
+}
+
+.dark-mode .rich-text-editor-wrapper .ql-toolbar .ql-picker-item {
+  color: #e0e0e0;
+}
+
+.dark-mode .rich-text-editor-wrapper .ql-toolbar .ql-picker-item:hover {
+  color: #ffffff;
+  background: rgba(59, 130, 246, 0.2);
+}
+
+.rich-text-editor-wrapper .ql-toolbar button:hover,
+.rich-text-editor-wrapper .ql-toolbar button.ql-active {
+  color: #3b82f6;
+}
+
+.dark-mode .rich-text-editor-wrapper .ql-toolbar button:hover,
+.dark-mode .rich-text-editor-wrapper .ql-toolbar button.ql-active {
+  color: #60a5fa;
+}
+
 .note-textarea {
   width: 100%;
   padding: 15px;
