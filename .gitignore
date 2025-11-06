@@ -37,4 +37,5 @@ yarn-error.log*
 # Documentation files
 *.md
 *.txt
+*.bat
 
