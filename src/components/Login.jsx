@@ -24,6 +24,8 @@ function Login({ onLogin }) {
   const [emailVerified, setEmailVerified] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [passwordError, setPasswordError] = useState('')
+  const [needsVerification, setNeedsVerification] = useState(false)
+  const [verificationEmailSent, setVerificationEmailSent] = useState(false)
 
   // Add class to body to hide scrollbar and remove padding
   useEffect(() => {
@@ -63,11 +65,20 @@ function Login({ onLogin }) {
 
   // Password validation function
   const validatePassword = (password) => {
-    if (!password || password.length < 6) {
-      return 'Password must be at least 6 characters long'
+    if (!password || password.length < 8) {
+      return 'Password must be at least 8 characters long'
     }
     if (password.length > 128) {
       return 'Password must be less than 128 characters'
+    }
+    if (!/[A-Z]/.test(password)) {
+      return 'Password must contain at least one capital letter'
+    }
+    if (!/[0-9]/.test(password)) {
+      return 'Password must contain at least one number'
+    }
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+      return 'Password must contain at least one symbol'
     }
     return ''
   }
@@ -108,7 +119,17 @@ function Login({ onLogin }) {
           password
         )
         
-        // Successful sign in
+        // Check if email is verified
+        if (!userCredential.user.emailVerified) {
+          setEmailVerifying(false)
+          setIsLoading(false)
+          setNeedsVerification(true)
+          setError('')
+          // Keep user signed in so they can resend verification
+          return
+        }
+        
+        // Successful sign in with verified email
         setEmailVerifying(false)
         setIsLoading(false)
         const displayName = userCredential.user.displayName || userCredential.user.email?.split('@')[0] || email.trim()
@@ -126,21 +147,28 @@ function Login({ onLogin }) {
             
             // Send email verification for new account
             try {
-              await sendEmailVerification(userCredential.user)
+              console.log('Sending verification email to:', userCredential.user.email)
+              console.log('Action URL:', window.location.origin)
+              await sendEmailVerification(userCredential.user, {
+                url: window.location.origin,
+                handleCodeInApp: false
+              })
+              console.log('✓ Verification email sent successfully')
               setEmailVerified(true)
+              setNeedsVerification(true)
             } catch (verifyError) {
-              console.error('Error sending verification email:', verifyError)
-              // Continue even if verification email fails
+              console.error('✗ Error sending verification email:', verifyError)
+              console.error('Error code:', verifyError.code)
+              console.error('Error message:', verifyError.message)
+              if (verifyError.code === 'auth/too-many-requests') {
+                setError('Too many requests. Please wait a few minutes before requesting another email.')
+              } else {
+                setError(`Failed to send verification email: ${verifyError.message || verifyError.code}. Please check Firebase Console configuration.`)
+              }
             }
             
             setEmailVerifying(false)
-            
-            // Show success message and wait before logging in
-            setTimeout(() => {
-              setIsLoading(false)
-              const displayName = userCredential.user.displayName || userCredential.user.email?.split('@')[0] || email.trim()
-              onLogin(displayName)
-            }, 2000)
+            setIsLoading(false)
           } catch (createError) {
             // If creation fails, user likely exists with wrong password
             setEmailVerifying(false)
@@ -149,7 +177,7 @@ function Login({ onLogin }) {
             if (createError.code === 'auth/email-already-in-use') {
               setError('Invalid email or password. Please check your credentials.')
             } else if (createError.code === 'auth/weak-password') {
-              setPasswordError('Password is too weak. Please use a stronger password (at least 6 characters).')
+              setPasswordError('Password is too weak. Password must be at least 8 characters with capital letter, number, and symbol.')
             } else if (createError.code === 'auth/invalid-email') {
               setError('Invalid email address. Please check your email.')
             } else {
@@ -167,20 +195,28 @@ function Login({ onLogin }) {
             
             // Send email verification for new account
             try {
-              await sendEmailVerification(userCredential.user)
+              console.log('Sending verification email to:', userCredential.user.email)
+              console.log('Action URL:', window.location.origin)
+              await sendEmailVerification(userCredential.user, {
+                url: window.location.origin,
+                handleCodeInApp: false
+              })
+              console.log('✓ Verification email sent successfully')
               setEmailVerified(true)
+              setNeedsVerification(true)
             } catch (verifyError) {
-              console.error('Error sending verification email:', verifyError)
-              // Continue even if verification email fails
+              console.error('✗ Error sending verification email:', verifyError)
+              console.error('Error code:', verifyError.code)
+              console.error('Error message:', verifyError.message)
+              if (verifyError.code === 'auth/too-many-requests') {
+                setError('Too many requests. Please wait a few minutes before requesting another email.')
+              } else {
+                setError(`Failed to send verification email: ${verifyError.message || verifyError.code}. Please check Firebase Console configuration.`)
+              }
             }
             
             setEmailVerifying(false)
-            
-            setTimeout(() => {
-              setIsLoading(false)
-              const displayName = userCredential.user.displayName || userCredential.user.email?.split('@')[0] || email.trim()
-              onLogin(displayName)
-            }, 2000)
+            setIsLoading(false)
           } catch (createError) {
             setEmailVerifying(false)
             setIsLoading(false)
@@ -188,7 +224,7 @@ function Login({ onLogin }) {
             if (createError.code === 'auth/email-already-in-use') {
               setError('This email is already registered. Please sign in instead.')
             } else if (createError.code === 'auth/weak-password') {
-              setPasswordError('Password is too weak. Please use a stronger password (at least 6 characters).')
+              setPasswordError('Password is too weak. Password must be at least 8 characters with capital letter, number, and symbol.')
             } else {
               setError(createError.message || 'Failed to create account. Please try again.')
             }
@@ -223,21 +259,115 @@ function Login({ onLogin }) {
     }
 
     try {
-      await sendPasswordResetEmail(auth, resetEmail.trim())
+      console.log('Sending password reset email to:', resetEmail.trim())
+      console.log('Action URL:', window.location.origin)
+      await sendPasswordResetEmail(auth, resetEmail.trim(), {
+        url: window.location.origin,
+        handleCodeInApp: false
+      })
+      console.log('✓ Password reset email sent successfully')
       setResetSuccess(true)
       setTimeout(() => {
         setShowForgotPassword(false)
         setResetEmail('')
         setResetSuccess(false)
-      }, 3000)
+      }, 5000) // Increased timeout to give user more time to read the message
     } catch (error) {
+      console.error('✗ Error sending password reset email:', error)
+      console.error('Error code:', error.code)
+      console.error('Error message:', error.message)
       if (error.code === 'auth/user-not-found') {
         setError('No account found with this email address.')
       } else if (error.code === 'auth/invalid-email') {
         setError('Invalid email address. Please check your email.')
+      } else if (error.code === 'auth/too-many-requests') {
+        setError('Too many requests. Please wait a few minutes before requesting another reset email.')
       } else {
-        setError('Failed to send reset email. Please try again.')
+        setError(`Failed to send reset email: ${error.message || error.code}. Please check Firebase Console configuration.`)
       }
+    }
+  }
+
+  const handleResendVerification = async () => {
+    try {
+      setIsLoading(true)
+      setError('')
+      
+      // Get current user - wait a moment if needed
+      let user = auth.currentUser
+      if (!user) {
+        // Wait a bit for auth state to update
+        await new Promise(resolve => setTimeout(resolve, 100))
+        user = auth.currentUser
+      }
+      
+      if (!user) {
+        setError('Please sign in first to resend verification email.')
+        setIsLoading(false)
+        return
+      }
+      
+      console.log('Resending verification email to:', user.email)
+      console.log('Action URL:', window.location.origin)
+      await sendEmailVerification(user, {
+        url: window.location.origin,
+        handleCodeInApp: false
+      })
+      console.log('✓ Verification email resent successfully')
+      setVerificationEmailSent(true)
+      setEmailVerified(true)
+      setIsLoading(false)
+      
+      setTimeout(() => {
+        setVerificationEmailSent(false)
+      }, 5000)
+    } catch (error) {
+      console.error('✗ Error resending verification email:', error)
+      console.error('Error code:', error.code)
+      console.error('Error message:', error.message)
+      setIsLoading(false)
+      if (error.code === 'auth/too-many-requests') {
+        setError('Too many requests. Please wait a few minutes before requesting another email.')
+      } else {
+        setError(`Failed to resend verification email: ${error.message || error.code}. Please check Firebase Console configuration.`)
+      }
+    }
+  }
+
+  const handleCheckVerification = async () => {
+    try {
+      setIsLoading(true)
+      setError('')
+      
+      // Reload user to get latest verification status
+      let user = auth.currentUser
+      if (!user) {
+        // Wait a bit for auth state to update
+        await new Promise(resolve => setTimeout(resolve, 100))
+        user = auth.currentUser
+      }
+      
+      if (!user) {
+        setError('Please sign in first.')
+        setIsLoading(false)
+        return
+      }
+      
+      await user.reload()
+      
+      if (user.emailVerified) {
+        setNeedsVerification(false)
+        setIsLoading(false)
+        const displayName = user.displayName || user.email?.split('@')[0] || email.trim()
+        onLogin(displayName)
+      } else {
+        setIsLoading(false)
+        setError('Email not verified yet. Please check your inbox and click the verification link.')
+      }
+    } catch (error) {
+      console.error('Error checking verification:', error)
+      setIsLoading(false)
+      setError('Failed to check verification status. Please try again.')
     }
   }
 
@@ -249,7 +379,7 @@ function Login({ onLogin }) {
       const provider = new GoogleAuthProvider()
       const result = await signInWithPopup(auth, provider)
       
-      // Successful sign in
+      // Google accounts are automatically verified
       const user = result.user
       const displayName = user.displayName || user.email?.split('@')[0] || 'User'
       
@@ -271,6 +401,24 @@ function Login({ onLogin }) {
 
   return (
     <div className={`login-container ${darkMode ? 'dark-mode' : ''}`}>
+      {isLoading && (
+        <div className="login-loading-overlay">
+          <svg className="login-loading-spinner" viewBox="0 0 24 24">
+            <circle
+              className="login-spinner-circle"
+              cx="12"
+              cy="12"
+              r="10"
+              fill="none"
+              stroke="white"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeDasharray="60"
+              strokeDashoffset="60"
+            />
+          </svg>
+        </div>
+      )}
       <div className="login-wrapper">
         {/* Left Side - Login Form */}
         <div className="login-form-section">
@@ -288,10 +436,68 @@ function Login({ onLogin }) {
                 </div>
               )}
 
-              {emailVerified && (
-                <div className="email-verified-message">
-                  <span className="verified-icon">✓</span>
-                  Confirmation email sent to {email}! Please check your inbox and verify your email address.
+              {needsVerification && (
+                <div className="email-verification-overlay">
+                  <div className="email-verification-modal">
+                    <div className="verification-header">
+                      <span className="verification-icon">✉️</span>
+                      <h3>Email Verification Required</h3>
+                    </div>
+                    <p className="verification-message">
+                      {emailVerified 
+                        ? `A verification email has been sent to ${email}. Please check your inbox (and spam folder) and click the verification link to activate your account.`
+                        : `Your email address (${email}) has not been verified. Please verify your email to access your account.`
+                      }
+                    </p>
+                    {emailVerified && (
+                      <div className="verification-troubleshooting">
+                        <p className="troubleshooting-title">Not receiving the email?</p>
+                        <ul className="troubleshooting-list">
+                          <li>Check your spam/junk folder</li>
+                          <li>Wait 2-5 minutes (emails can be delayed)</li>
+                          <li>Verify the email address is correct</li>
+                          <li>Check browser console (F12) for errors</li>
+                          <li>Ensure Firebase Console is configured (see README)</li>
+                        </ul>
+                      </div>
+                    )}
+                    {verificationEmailSent && (
+                      <div className="verification-sent-message">
+                        ✓ Verification email sent! Please check your inbox.
+                      </div>
+                    )}
+                    <div className="verification-actions">
+                      <button
+                        type="button"
+                        onClick={handleCheckVerification}
+                        className="check-verification-btn"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? 'Checking...' : 'Check Verification Status'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleResendVerification}
+                        className="resend-verification-btn"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? 'Sending...' : 'Resend Email'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          setNeedsVerification(false)
+                          setEmailVerified(false)
+                          setError('')
+                          await auth.signOut()
+                        }}
+                        className="cancel-verification-btn"
+                        disabled={isLoading}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -309,7 +515,7 @@ function Login({ onLogin }) {
                   placeholder="Enter your email"
                   className="form-input"
                   autoComplete="email"
-                  disabled={isLoading}
+                  disabled={isLoading || needsVerification}
                 />
               </div>
 
@@ -328,13 +534,13 @@ function Login({ onLogin }) {
                     placeholder="Enter your password"
                     className="form-input"
                     autoComplete="current-password"
-                    disabled={isLoading}
+                    disabled={isLoading || needsVerification}
                   />
                   <button
                     type="button"
                     className="password-toggle-btn"
                     onClick={() => setShowPassword(!showPassword)}
-                    disabled={isLoading}
+                    disabled={isLoading || needsVerification}
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? (
@@ -358,46 +564,28 @@ function Login({ onLogin }) {
                 )}
               </div>
 
-              <button 
-                type="submit" 
-                className="login-btn"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <span className="loading-container">
-                    <svg className="loading-spinner" viewBox="0 0 24 24">
-                      <circle
-                        className="loading-spinner-circle"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeDasharray="60"
-                        strokeDashoffset="60"
-                      />
-                    </svg>
-                    <span className="loading-text">
-                      {emailVerifying ? 'Verifying email...' : 'Signing in...'}
-                    </span>
-                  </span>
-                ) : (
-                  'Sign In'
-                )}
-              </button>
+              {!needsVerification && (
+                <>
+                  <button 
+                    type="submit" 
+                    className="login-btn"
+                    disabled={isLoading}
+                  >
+                    Sign In
+                  </button>
 
-              <div className="forgot-password-link">
-                <button
-                  type="button"
-                  onClick={() => setShowForgotPassword(true)}
-                  className="forgot-password-btn"
-                  disabled={isLoading}
-                >
-                  Forgot Password?
-                </button>
-              </div>
+                  <div className="forgot-password-link">
+                    <button
+                      type="button"
+                      onClick={() => setShowForgotPassword(true)}
+                      className="forgot-password-btn"
+                      disabled={isLoading}
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
+                </>
+              )}
             </form>
 
             {/* Divider */}
@@ -406,44 +594,24 @@ function Login({ onLogin }) {
             </div>
 
             {/* Google Sign-In Button */}
-            <div className="google-signin-container">
-              <button
-                type="button"
-                onClick={handleGoogleSignIn}
-                className="google-signin-btn"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <span className="loading-container">
-                    <svg className="loading-spinner" viewBox="0 0 24 24">
-                      <circle
-                        className="loading-spinner-circle"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeDasharray="60"
-                        strokeDashoffset="60"
-                      />
-                    </svg>
-                    <span className="loading-text">Signing in...</span>
-                  </span>
-                ) : (
-                  <>
-                    <svg className="google-icon" viewBox="0 0 24 24">
-                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                    </svg>
-                    Sign in with Google
-                  </>
-                )}
+            {!needsVerification && (
+              <div className="google-signin-container">
+                <button
+                  type="button"
+                  onClick={handleGoogleSignIn}
+                  className="google-signin-btn"
+                  disabled={isLoading}
+                >
+                <svg className="google-icon" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Sign in with Google
               </button>
-            </div>
+              </div>
+            )}
 
             <div className="login-footer">
               <p className="login-hint">
@@ -510,8 +678,8 @@ function Login({ onLogin }) {
             <h3>Reset Password</h3>
             {resetSuccess ? (
               <div className="reset-success">
-                <p>✓ Password reset instructions have been sent to your email.</p>
-                <p className="reset-hint">(In a real app, you would receive an email with reset link)</p>
+                <p>✓ Password reset email has been sent to <strong>{resetEmail}</strong></p>
+                <p className="reset-hint">Please check your inbox (and spam folder) for the reset link. The link will expire in 1 hour.</p>
               </div>
             ) : (
               <form onSubmit={handleForgotPassword} className="reset-form">

@@ -66,6 +66,17 @@ function AppContent() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
+        // Check if email is verified (only for email/password accounts)
+        if (user.providerData[0]?.providerId === 'password' && !user.emailVerified) {
+          // Email not verified - sign out and show login
+          await signOut(auth)
+          setIsAuthenticated(false)
+          setUsername('')
+          setTasks([])
+          setIsLoading(false)
+          return
+        }
+        
         setIsAuthenticated(true)
         setUsername(user.displayName || user.email?.split('@')[0] || 'User')
         

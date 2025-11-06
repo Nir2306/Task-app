@@ -313,8 +313,11 @@ body.login-page-active::-webkit-scrollbar {
 }
 
 .login-btn:disabled {
-  opacity: 0.7;
+  background: #e5e7eb;
+  color: #6b7280;
   cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
 }
 
 .dark-mode .login-btn {
@@ -327,27 +330,36 @@ body.login-page-active::-webkit-scrollbar {
   background: #0052cc;
 }
 
-.loading-container {
+.dark-mode .login-btn:disabled {
+  background: #374151;
+  color: #9ca3af;
+  box-shadow: none;
+}
+
+/* Loading Overlay */
+.login-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(10, 25, 41, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  z-index: 10000;
 }
 
-.loading-spinner {
-  width: 20px;
-  height: 20px;
+.login-loading-spinner {
+  width: 50px;
+  height: 50px;
   animation: spinnerRotate 1s linear infinite;
 }
 
-.loading-spinner-circle {
+.login-spinner-circle {
   animation: spinnerDash 1.5s ease-in-out infinite;
-}
-
-.loading-text {
-  font-size: 0.95rem;
-  font-weight: 500;
-  letter-spacing: 0.3px;
 }
 
 @keyframes spinnerRotate {
@@ -372,15 +384,6 @@ body.login-page-active::-webkit-scrollbar {
     stroke-dasharray: 90, 150;
     stroke-dashoffset: -124;
   }
-}
-
-/* Google sign-in button loading state */
-.google-signin-btn .loading-container {
-  color: #333;
-}
-
-.dark-mode .google-signin-btn .loading-container {
-  color: #e0e0e0;
 }
 
 .forgot-password-link {
@@ -1356,29 +1359,255 @@ body.login-page-active::-webkit-scrollbar {
   display: none;
 }
 
-.email-verified-message {
+.email-verification-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(10, 25, 41, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+  animation: fadeIn 0.3s ease;
+}
+
+.email-verification-modal {
+  background: white;
+  border-radius: 16px;
+  padding: 30px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  animation: slideUp 0.3s ease;
+}
+
+.dark-mode .email-verification-modal {
+  background: #1e293b;
+  color: #e0e0e0;
+}
+
+.verification-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  text-align: center;
+  justify-content: center;
+}
+
+.verification-icon {
+  font-size: 2rem;
+}
+
+.verification-header h3 {
+  margin: 0;
+  color: #1e293b;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.dark-mode .verification-header h3 {
+  color: #e0e0e0;
+}
+
+.verification-message {
+  margin: 0 0 20px 0;
+  color: #475569;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.dark-mode .verification-message {
+  color: #cbd5e1;
+}
+
+.verification-sent-message {
   background: #d1fae5;
   border: 1px solid #6ee7b7;
   color: #065f46;
   padding: 12px 16px;
   border-radius: 8px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  margin-bottom: 20px;
   font-size: 0.9rem;
-  animation: slideIn 0.3s ease;
+  font-weight: 500;
+  text-align: center;
 }
 
-.dark-mode .email-verified-message {
+.dark-mode .verification-sent-message {
   background: #064e3b;
   border-color: #059669;
   color: #6ee7b7;
 }
 
-.verified-icon {
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #10b981;
+.verification-troubleshooting {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 16px;
+  margin-bottom: 20px;
+}
+
+.dark-mode .verification-troubleshooting {
+  background: #1e3a5f;
+  border-color: #3b82f6;
+}
+
+.troubleshooting-title {
+  margin: 0 0 10px 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #0369a1;
+}
+
+.dark-mode .troubleshooting-title {
+  color: #93c5fd;
+}
+
+.troubleshooting-list {
+  margin: 0;
+  padding-left: 20px;
+  color: #075985;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.dark-mode .troubleshooting-list {
+  color: #bfdbfe;
+}
+
+.troubleshooting-list li {
+  margin-bottom: 6px;
+}
+
+.verification-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.check-verification-btn {
+  width: 100%;
+  padding: 14px 20px;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.check-verification-btn:hover:not(:disabled) {
+  background: #059669;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.check-verification-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.dark-mode .check-verification-btn {
+  background: #10b981;
+}
+
+.dark-mode .check-verification-btn:hover:not(:disabled) {
+  background: #059669;
+}
+
+.resend-verification-btn {
+  width: 100%;
+  padding: 14px 20px;
+  background: #0066ff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.resend-verification-btn:hover:not(:disabled) {
+  background: #0052cc;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 102, 255, 0.4);
+}
+
+.resend-verification-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.dark-mode .resend-verification-btn {
+  background: #0066ff;
+}
+
+.dark-mode .resend-verification-btn:hover:not(:disabled) {
+  background: #0052cc;
+}
+
+.cancel-verification-btn {
+  width: 100%;
+  padding: 14px 20px;
+  background: #e5e7eb;
+  color: #374151;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cancel-verification-btn:hover:not(:disabled) {
+  background: #d1d5db;
+  transform: translateY(-2px);
+}
+
+.cancel-verification-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.dark-mode .cancel-verification-btn {
+  background: #374151;
+  color: #e0e0e0;
+}
+
+.dark-mode .cancel-verification-btn:hover:not(:disabled) {
+  background: #4b5563;
 }
 
 @keyframes slideIn {
