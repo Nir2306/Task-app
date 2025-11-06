@@ -20,12 +20,47 @@ function AppContent() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [username, setUsername] = useState('')
   const [showLogoutModal, setShowLogoutModal] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const { darkMode, toggleDarkMode } = useTheme()
 
   // Initialize offline storage
   useEffect(() => {
     initializeOfflineStorage()
   }, [])
+
+  // Close mobile menu on window resize (when switching to desktop)
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth > 768 && isMobileMenuOpen) {
+        setIsMobileMenuOpen(false)
+      }
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [isMobileMenuOpen])
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isMobileMenuOpen])
+
+  // Close mobile menu on ESC key press
+  useEffect(() => {
+    const handleEscKey = (event) => {
+      if (event.key === 'Escape' && isMobileMenuOpen) {
+        setIsMobileMenuOpen(false)
+      }
+    }
+    window.addEventListener('keydown', handleEscKey)
+    return () => window.removeEventListener('keydown', handleEscKey)
+  }, [isMobileMenuOpen])
 
   // Check authentication status using Firebase Auth
   useEffect(() => {
@@ -116,6 +151,11 @@ function AppContent() {
     setShowLogoutModal(false)
   }
 
+  const handleTabChange = (tab) => {
+    setActiveTab(tab)
+    setIsMobileMenuOpen(false) // Close menu when tab changes
+  }
+
   // Show login page if not authenticated
   if (!isAuthenticated) {
     return (
@@ -129,15 +169,9 @@ function AppContent() {
   if (isLoading) {
     return (
       <div className={`app ${darkMode ? 'dark-mode' : ''}`}>
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          height: '100vh',
-          fontSize: '1.2rem',
-          color: darkMode ? '#e0e0e0' : '#333'
-        }}>
-          Loading...
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p className="loading-text">Loading...</p>
         </div>
       </div>
     )
@@ -148,16 +182,27 @@ function AppContent() {
       <NetworkStatus />
       <header className="app-header">
         <div className="header-content">
-          <div>
-            <h1>Timesheet Tracker</h1>
-            <p>Track your daily activities and time</p>
-            {username && (
-              <p className="user-greeting" style={{ fontSize: '0.85rem', marginTop: '5px', opacity: 0.8 }}>
-                Welcome, {username}
-              </p>
-            )}
+          <div className="header-left">
+            <button 
+              className="hamburger-menu-btn"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label="Toggle menu"
+            >
+              <span className={`hamburger-line ${isMobileMenuOpen ? 'open' : ''}`}></span>
+              <span className={`hamburger-line ${isMobileMenuOpen ? 'open' : ''}`}></span>
+              <span className={`hamburger-line ${isMobileMenuOpen ? 'open' : ''}`}></span>
+            </button>
+            <div className="header-title-section">
+              <h1>Timesheet Tracker</h1>
+              <p className="header-subtitle">Track your daily activities and time</p>
+              {username && (
+                <p className="user-greeting">
+                  Welcome, {username}
+                </p>
+              )}
+            </div>
           </div>
-          <div>
+          <div className="header-right">
             <button 
               onClick={handleLogoutClick} 
               className="logout-btn"
@@ -172,38 +217,110 @@ function AppContent() {
         </div>
       </header>
 
-      <nav className="app-nav">
+      {/* Desktop Navigation */}
+      <nav className="app-nav desktop-nav" aria-label="Main navigation">
         <button 
           className={`nav-btn ${activeTab === 'entry' ? 'active' : ''}`}
-          onClick={() => setActiveTab('entry')}
+          onClick={() => handleTabChange('entry')}
+          aria-label="Add Entry"
+          aria-current={activeTab === 'entry' ? 'page' : undefined}
         >
           Add Entry
         </button>
         <button 
           className={`nav-btn ${activeTab === 'list' ? 'active' : ''}`}
-          onClick={() => setActiveTab('list')}
+          onClick={() => handleTabChange('list')}
+          aria-label="All Entries"
+          aria-current={activeTab === 'list' ? 'page' : undefined}
         >
           All Entries
         </button>
         <button 
           className={`nav-btn ${activeTab === 'dashboard' ? 'active' : ''}`}
-          onClick={() => setActiveTab('dashboard')}
+          onClick={() => handleTabChange('dashboard')}
+          aria-label="Dashboard"
+          aria-current={activeTab === 'dashboard' ? 'page' : undefined}
         >
           Dashboard
         </button>
         <button 
           className={`nav-btn ${activeTab === 'generator' ? 'active' : ''}`}
-          onClick={() => setActiveTab('generator')}
+          onClick={() => handleTabChange('generator')}
+          aria-label="Name Generator"
+          aria-current={activeTab === 'generator' ? 'page' : undefined}
         >
           Name Generator
         </button>
         <button 
           className={`nav-btn ${activeTab === 'notes' ? 'active' : ''}`}
-          onClick={() => setActiveTab('notes')}
+          onClick={() => handleTabChange('notes')}
+          aria-label="Notes"
+          aria-current={activeTab === 'notes' ? 'page' : undefined}
         >
           Notes
         </button>
       </nav>
+
+      {/* Mobile Navigation Menu */}
+      <div className={`mobile-menu-overlay ${isMobileMenuOpen ? 'open' : ''}`} onClick={() => setIsMobileMenuOpen(false)} aria-hidden={!isMobileMenuOpen}>
+        <nav className={`mobile-nav ${isMobileMenuOpen ? 'open' : ''}`} onClick={(e) => e.stopPropagation()} aria-label="Mobile navigation">
+          <div className="mobile-nav-header">
+            <h2>Menu</h2>
+            <button 
+              className="mobile-menu-close"
+              onClick={() => setIsMobileMenuOpen(false)}
+              aria-label="Close menu"
+            >
+              ✕
+            </button>
+          </div>
+          <div className="mobile-nav-items">
+            <button 
+              className={`mobile-nav-item ${activeTab === 'entry' ? 'active' : ''}`}
+              onClick={() => handleTabChange('entry')}
+              aria-label="Add Entry"
+              aria-current={activeTab === 'entry' ? 'page' : undefined}
+            >
+              <span className="nav-label">Add Entry</span>
+            </button>
+            <button 
+              className={`mobile-nav-item ${activeTab === 'list' ? 'active' : ''}`}
+              onClick={() => handleTabChange('list')}
+              aria-label="All Entries"
+              aria-current={activeTab === 'list' ? 'page' : undefined}
+            >
+              <span className="nav-label">All Entries</span>
+            </button>
+            <button 
+              className={`mobile-nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
+              onClick={() => handleTabChange('dashboard')}
+              aria-label="Dashboard"
+              aria-current={activeTab === 'dashboard' ? 'page' : undefined}
+            >
+              <span className="nav-label">Dashboard</span>
+            </button>
+            <button 
+              className={`mobile-nav-item ${activeTab === 'generator' ? 'active' : ''}`}
+              onClick={() => handleTabChange('generator')}
+              aria-label="Name Generator"
+              aria-current={activeTab === 'generator' ? 'page' : undefined}
+            >
+              <span className="nav-label">Name Generator</span>
+            </button>
+            <button 
+              className={`mobile-nav-item ${activeTab === 'notes' ? 'active' : ''}`}
+              onClick={() => handleTabChange('notes')}
+              aria-label="Notes"
+              aria-current={activeTab === 'notes' ? 'page' : undefined}
+            >
+              <span className="nav-label">Notes</span>
+            </button>
+          </div>
+          <div className="mobile-nav-footer">
+            <p className="mobile-user-info">Welcome, {username}</p>
+          </div>
+        </nav>
+      </div>
 
       <main className={`app-main ${activeTab === 'entry' ? 'no-scroll' : ''}`}>
         {activeTab === 'entry' && (

@@ -20,10 +20,7 @@ function NetworkStatus() {
       const result = await processSyncQueue()
       if (result.success) {
         setPendingSync(0)
-        if (result.processed > 0) {
-          // Show success message (could be a toast)
-          console.log(`Successfully synced ${result.processed} operations`)
-        }
+        // Successfully synced - no need to log in production
       }
     } catch (error) {
       console.error('Error during sync:', error)

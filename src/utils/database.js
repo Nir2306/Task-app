@@ -351,7 +351,7 @@ export const migrateFromLocalStorage = async () => {
       await dbFavorites.saveAll(favorites)
     }
 
-    console.log('Data migration completed')
+    // Data migration completed
   } catch (error) {
     console.error('Error migrating data:', error)
   }

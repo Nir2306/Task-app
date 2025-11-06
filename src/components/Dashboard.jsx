@@ -34,16 +34,6 @@ function Dashboard({ tasks = [] }) {
   const [chartTab, setChartTab] = useState('pie') // pie, line, bar
   const { darkMode } = useTheme()
 
-  // Debug: Log tasks when component mounts or tasks change
-  useEffect(() => {
-    console.log('Dashboard - Tasks received:', tasks?.length || 0, 'tasks')
-    if (tasks && tasks.length > 0) {
-      console.log('Sample task:', tasks[0])
-      console.log('Task date:', tasks[0].date)
-      console.log('Task duration:', tasks[0].duration)
-      console.log('Task name:', tasks[0].taskName)
-    }
-  }, [tasks])
 
   const parseDuration = (duration) => {
     if (!duration) return 0
@@ -118,7 +108,6 @@ function Dashboard({ tasks = [] }) {
       }
     })
     
-    console.log('Processed data:', { byTask, byDay, byWeek, byMonth })
 
     return { byTask, byDay, byWeek, byMonth }
   }, [tasks])
@@ -374,12 +363,6 @@ function Dashboard({ tasks = [] }) {
     }
   }), [darkMode])
 
-  // Log chart data when it changes (after initialization)
-  useEffect(() => {
-    console.log('Task Data:', taskData)
-    console.log('Time Series Data:', timeSeriesData)
-    console.log('Data by Period:', getDataByPeriod)
-  }, [taskData, timeSeriesData, getDataByPeriod])
 
   // Ensure tasks is always an array
   const safeTasks = tasks || []
@@ -419,9 +402,6 @@ function Dashboard({ tasks = [] }) {
     )
   }
 
-  console.log('Dashboard rendering with tasks:', safeTasks.length)
-  console.log('Total hours:', totalHours)
-  console.log('Total tasks:', totalTasks)
   
   return (
     <div className="dashboard-container" style={{ background: darkMode ? 'transparent' : 'transparent', minHeight: '100%', position: 'relative', zIndex: 1000, width: '100%' }}>

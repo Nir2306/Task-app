@@ -36,7 +36,7 @@
   grid-template-columns: auto 1fr;
   gap: 15px;
   margin-bottom: 12px;
-  align-items: start;
+  align-items: stretch;
   flex: 1;
   min-height: 0;
 }
@@ -52,10 +52,13 @@
 .calendar-wrapper {
   display: flex;
   justify-content: center;
+  align-items: center;
   background: white;
   padding: 15px;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  align-self: stretch;
+  min-height: 100%;
 }
 
 .dark-mode .calendar-wrapper {
@@ -64,6 +67,7 @@
 
 .big-calendar {
   font-size: 0.9rem;
+  width: 100%;
 }
 
 .big-calendar .react-datepicker__month-container {

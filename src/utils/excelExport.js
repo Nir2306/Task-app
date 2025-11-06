@@ -66,6 +66,6 @@ export const exportToExcel = (tasks) => {
   // Export file
   XLSX.writeFile(wb, filename)
   
-  console.log(`Exported ${tasks.length} entries to ${filename}`)
+  // File exported successfully
 }
 

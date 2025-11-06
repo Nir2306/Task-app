@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useTheme } from '../contexts/ThemeContext'
 import { 
   signInWithEmailAndPassword, 
@@ -24,6 +24,36 @@ function Login({ onLogin }) {
   const [emailVerified, setEmailVerified] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [passwordError, setPasswordError] = useState('')
+
+  // Add class to body to hide scrollbar and remove padding
+  useEffect(() => {
+    document.body.classList.add('login-page-active')
+    document.body.style.overflow = 'hidden'
+    document.body.style.padding = '0'
+    document.body.style.margin = '0'
+    document.body.style.background = '#0a1929'
+    
+    const root = document.getElementById('root')
+    if (root) {
+      root.style.padding = '0'
+      root.style.margin = '0'
+      root.style.maxWidth = '100%'
+    }
+
+    return () => {
+      document.body.classList.remove('login-page-active')
+      document.body.style.overflow = ''
+      document.body.style.padding = ''
+      document.body.style.margin = ''
+      document.body.style.background = ''
+      
+      if (root) {
+        root.style.padding = ''
+        root.style.margin = ''
+        root.style.maxWidth = ''
+      }
+    }
+  }, [])
 
   // Email format validation function
   const validateEmailFormat = (email) => {
@@ -335,20 +365,23 @@ function Login({ onLogin }) {
               >
                 {isLoading ? (
                   <span className="loading-container">
-                    {emailVerifying ? (
-                      <>
-                        <span className="loading-dot"></span>
-                        <span className="loading-dot"></span>
-                        <span className="loading-dot"></span>
-                        <span style={{ marginLeft: '8px', fontSize: '0.85rem' }}>Verifying email...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="loading-dot"></span>
-                        <span className="loading-dot"></span>
-                        <span className="loading-dot"></span>
-                      </>
-                    )}
+                    <svg className="loading-spinner" viewBox="0 0 24 24">
+                      <circle
+                        className="loading-spinner-circle"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeDasharray="60"
+                        strokeDashoffset="60"
+                      />
+                    </svg>
+                    <span className="loading-text">
+                      {emailVerifying ? 'Verifying email...' : 'Signing in...'}
+                    </span>
                   </span>
                 ) : (
                   'Sign In'
@@ -380,13 +413,35 @@ function Login({ onLogin }) {
                 className="google-signin-btn"
                 disabled={isLoading}
               >
-                <svg className="google-icon" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                </svg>
-                Sign in with Google
+                {isLoading ? (
+                  <span className="loading-container">
+                    <svg className="loading-spinner" viewBox="0 0 24 24">
+                      <circle
+                        className="loading-spinner-circle"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeDasharray="60"
+                        strokeDashoffset="60"
+                      />
+                    </svg>
+                    <span className="loading-text">Signing in...</span>
+                  </span>
+                ) : (
+                  <>
+                    <svg className="google-icon" viewBox="0 0 24 24">
+                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Sign in with Google
+                  </>
+                )}
               </button>
             </div>
 
@@ -398,61 +453,41 @@ function Login({ onLogin }) {
           </div>
         </div>
 
-        {/* Right Side - Animation/Illustration */}
+        {/* Right Side - Fluid Background */}
         <div className="login-animation-section">
           <div className="animation-container">
+            <div className="fluid-background">
+              <div className="fluid-blob blob-1"></div>
+              <div className="fluid-blob blob-2"></div>
+              <div className="fluid-blob blob-3"></div>
+              <div className="fluid-blob blob-4"></div>
+            </div>
             <div className="floating-shapes">
               <div className="shape shape-1"></div>
               <div className="shape shape-2"></div>
               <div className="shape shape-3"></div>
               <div className="shape shape-4"></div>
               <div className="shape shape-5"></div>
+              <div className="shape shape-6"></div>
+              <div className="shape shape-7"></div>
+              <div className="shape shape-8"></div>
+              <div className="shape shape-9"></div>
+              <div className="shape shape-10"></div>
+              <div className="shape shape-11"></div>
+              <div className="shape shape-12"></div>
             </div>
-            <div className="animated-icon">
-              {showPassword ? (
-                <svg viewBox="0 0 200 200" className="timesheet-active-icon">
-                  {/* Active Timesheet - Tasks Visible */}
-                  <rect x="40" y="30" width="120" height="140" rx="8" fill="none" stroke="rgba(59, 130, 246, 0.3)" strokeWidth="2" className="timesheet-card"/>
-                  {/* Task items appearing */}
-                  <rect x="50" y="50" width="100" height="12" rx="2" fill="rgba(59, 130, 246, 0.8)" className="task-item task-1"/>
-                  <circle cx="155" cy="56" r="5" fill="#22c55e" className="check-icon check-1"/>
-                  <rect x="50" y="70" width="90" height="12" rx="2" fill="rgba(59, 130, 246, 0.8)" className="task-item task-2"/>
-                  <circle cx="145" cy="76" r="5" fill="#22c55e" className="check-icon check-2"/>
-                  <rect x="50" y="90" width="80" height="12" rx="2" fill="rgba(59, 130, 246, 0.8)" className="task-item task-3"/>
-                  <circle cx="135" cy="96" r="5" fill="#22c55e" className="check-icon check-3"/>
-                  {/* Progress bar */}
-                  <rect x="50" y="120" width="100" height="8" rx="4" fill="rgba(59, 130, 246, 0.2)" className="progress-bg"/>
-                  <rect x="50" y="120" width="75" height="8" rx="4" fill="#22c55e" className="progress-bar"/>
-                  {/* Clock icon */}
-                  <circle cx="100" cy="150" r="15" fill="none" stroke="rgba(59, 130, 246, 0.6)" strokeWidth="2"/>
-                  <line x1="100" y1="150" x2="100" y2="142" stroke="rgba(59, 130, 246, 1)" strokeWidth="2" strokeLinecap="round" className="clock-hand-1"/>
-                  <line x1="100" y1="150" x2="108" y2="150" stroke="rgba(59, 130, 246, 1)" strokeWidth="2" strokeLinecap="round" className="clock-hand-2"/>
-                  {/* Success particles */}
-                  <circle cx="60" cy="40" r="3" fill="#22c55e" className="success-particle particle-1"/>
-                  <circle cx="140" cy="35" r="2" fill="#22c55e" className="success-particle particle-2"/>
-                  <circle cx="170" cy="60" r="3" fill="#22c55e" className="success-particle particle-3"/>
-                </svg>
-              ) : (
-                <svg viewBox="0 0 200 200" className="timesheet-secure-icon">
-                  {/* Secure/Locked Timesheet */}
-                  <rect x="40" y="30" width="120" height="140" rx="8" fill="none" stroke="rgba(59, 130, 246, 0.3)" strokeWidth="2" className="timesheet-card"/>
-                  {/* Lock icon overlay */}
-                  <circle cx="100" cy="100" r="35" fill="none" stroke="rgba(59, 130, 246, 0.4)" strokeWidth="2" strokeDasharray="5,5" className="secure-circle"/>
-                  <path d="M 100 75 Q 100 70 95 70 Q 90 70 90 75 L 90 95" stroke="rgba(59, 130, 246, 0.8)" strokeWidth="4" strokeLinecap="round" fill="none" className="lock-shackle"/>
-                  <rect x="85" y="95" width="30" height="25" rx="3" fill="none" stroke="rgba(59, 130, 246, 1)" strokeWidth="4" className="lock-body"/>
-                  <circle cx="100" cy="107" r="4" fill="#3b82f6" className="lock-keyhole"/>
-                  {/* Blurred task lines */}
-                  <rect x="50" y="50" width="100" height="8" rx="2" fill="rgba(59, 130, 246, 0.15)" className="blurred-task"/>
-                  <rect x="50" y="65" width="90" height="8" rx="2" fill="rgba(59, 130, 246, 0.15)" className="blurred-task"/>
-                  <rect x="50" y="80" width="80" height="8" rx="2" fill="rgba(59, 130, 246, 0.15)" className="blurred-task"/>
-                  {/* Security shield */}
-                  <path d="M 100 45 L 110 50 L 110 60 Q 110 70 100 75 Q 90 70 90 60 L 90 50 Z" fill="none" stroke="rgba(59, 130, 246, 0.6)" strokeWidth="2" className="shield-icon"/>
-                </svg>
-              )}
+            <div className="geometric-elements">
+              <div className="geo-circle geo-1"></div>
+              <div className="geo-circle geo-2"></div>
+              <div className="geo-circle geo-3"></div>
+              <div className="geo-line geo-line-1"></div>
+              <div className="geo-line geo-line-2"></div>
+              <div className="geo-line geo-line-3"></div>
             </div>
-            <div className="animation-text">
-              <h2>{showPassword ? 'Ready to Track' : 'Secure Timesheet'}</h2>
-              <p>{showPassword ? 'Your tasks are ready - start tracking your time' : 'Your data is protected - sign in to access your timesheet'}</p>
+            <div className="grid-overlay"></div>
+            <div className="welcome-text">
+              <h2 className="welcome-title">Track Your Time,<br />Achieve Your Goals</h2>
+              <p className="welcome-subtitle">Efficient time management starts here. Log your activities, analyze your productivity, and make every minute count.</p>
             </div>
           </div>
         </div>

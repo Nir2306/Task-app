@@ -303,7 +303,7 @@ export const initializeOfflineStorage = async () => {
     if (isOnline() && auth.currentUser) {
       const queue = getSyncQueue()
       if (queue.length > 0) {
-        console.log(`Processing ${queue.length} pending sync operations...`)
+        // Processing pending sync operations
         await processSyncQueue()
       }
     }
