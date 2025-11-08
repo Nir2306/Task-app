@@ -3,6 +3,7 @@ import { ThemeProvider, useTheme } from './contexts/ThemeContext'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { auth } from './utils/firebase'
 import TimesheetForm from './components/TimesheetForm'
+import CalendarView from './components/CalendarView'
 import Dashboard from './components/Dashboard'
 import TaskList from './components/TaskList'
 import NameGenerator from './components/NameGenerator'
@@ -28,11 +29,12 @@ const hasPersistedAuthState = () => {
 function AppContent() {
   const [tasks, setTasks] = useState([])
   const [activeTab, setActiveTab] = useState('entry')
-  const [isLoading, setIsLoading] = useState(hasPersistedAuthState()) // Only show loading if there's a persisted session
+  const [isLoading, setIsLoading] = useState(true) // Always show loading initially while checking auth
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [username, setUsername] = useState('')
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
   const { darkMode, toggleDarkMode } = useTheme()
 
   // Initialize offline storage
@@ -43,6 +45,7 @@ function AppContent() {
   // Close mobile menu on window resize (when switching to desktop)
   useEffect(() => {
     const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768)
       if (window.innerWidth > 768 && isMobileMenuOpen) {
         setIsMobileMenuOpen(false)
       }
@@ -370,7 +373,16 @@ function AppContent() {
 
       <main className={`app-main ${activeTab === 'entry' ? 'no-scroll' : ''}`}>
         {activeTab === 'entry' && (
-          <TimesheetForm onAddTask={handleAddTask} />
+          isMobile ? (
+            <CalendarView 
+              tasks={tasks}
+              onAddTask={handleAddTask}
+              onEditTask={handleEditTask}
+              onDeleteTask={handleDeleteTask}
+            />
+          ) : (
+            <TimesheetForm onAddTask={handleAddTask} />
+          )
         )}
         {activeTab === 'list' && (
           <TaskList 

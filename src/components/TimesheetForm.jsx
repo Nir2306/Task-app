@@ -138,51 +138,93 @@ function TimesheetForm({ onAddTask }) {
               <div className="time-inputs-grid">
                 <div className="form-group compact">
                   <label htmlFor="start-time">Start Time</label>
-                  <DatePicker
-                    id="start-time"
-                    selected={startTime}
-                    onChange={(time) => {
-                      setStartTime(time)
-                      if (duration && time) {
-                        const [hours = 0, minutes = 0] = duration.split(/[hms\s]+/).filter(Boolean).map(Number)
-                        const totalMinutes = hours * 60 + minutes
-                        const newEndTime = new Date(time.getTime() + totalMinutes * 60 * 1000)
-                        setEndTime(newEndTime)
-                      }
-                    }}
-                    showTimeSelect
-                    showTimeSelectOnly
-                    timeIntervals={15}
-                    timeCaption="Time"
-                    dateFormat="h:mm aa"
-                    className="form-input time-input"
-                    portalId="root"
-                  />
+                  {/* Mobile: Use native time input, Desktop: Use DatePicker */}
+                  <div className="time-input-wrapper">
+                    <input
+                      id="start-time-mobile"
+                      type="time"
+                      value={startTime.toTimeString().slice(0, 5)}
+                      onChange={(e) => {
+                        const [hours, minutes] = e.target.value.split(':').map(Number)
+                        const newTime = new Date(startTime)
+                        newTime.setHours(hours, minutes, 0, 0)
+                        setStartTime(newTime)
+                        if (duration && newTime) {
+                          const [durHours = 0, durMinutes = 0] = duration.split(/[hms\s]+/).filter(Boolean).map(Number)
+                          const totalMinutes = durHours * 60 + durMinutes
+                          const newEndTime = new Date(newTime.getTime() + totalMinutes * 60 * 1000)
+                          setEndTime(newEndTime)
+                        }
+                      }}
+                      className="form-input time-input time-input-mobile"
+                    />
+                    <DatePicker
+                      id="start-time"
+                      selected={startTime}
+                      onChange={(time) => {
+                        setStartTime(time)
+                        if (duration && time) {
+                          const [hours = 0, minutes = 0] = duration.split(/[hms\s]+/).filter(Boolean).map(Number)
+                          const totalMinutes = hours * 60 + minutes
+                          const newEndTime = new Date(time.getTime() + totalMinutes * 60 * 1000)
+                          setEndTime(newEndTime)
+                        }
+                      }}
+                      showTimeSelect
+                      showTimeSelectOnly
+                      timeIntervals={15}
+                      timeCaption="Time"
+                      dateFormat="h:mm aa"
+                      className="form-input time-input time-input-desktop"
+                      portalId="root"
+                    />
+                  </div>
                 </div>
 
                 <div className="form-group compact">
                   <label htmlFor="end-time">End Time</label>
-                  <DatePicker
-                    id="end-time"
-                    selected={endTime}
-                    onChange={(time) => {
-                      setEndTime(time)
-                      if (time && startTime && time > startTime) {
-                        const diffMs = time - startTime
-                        const diffHours = diffMs / (1000 * 60 * 60)
-                        const hours = Math.floor(diffHours)
-                        const minutes = Math.floor((diffHours - hours) * 60)
-                        setDuration(`${hours}h ${minutes}m`)
-                      }
-                    }}
-                    showTimeSelect
-                    showTimeSelectOnly
-                    timeIntervals={15}
-                    timeCaption="Time"
-                    dateFormat="h:mm aa"
-                    className="form-input time-input"
-                    portalId="root"
-                  />
+                  <div className="time-input-wrapper">
+                    <input
+                      id="end-time-mobile"
+                      type="time"
+                      value={endTime.toTimeString().slice(0, 5)}
+                      onChange={(e) => {
+                        const [hours, minutes] = e.target.value.split(':').map(Number)
+                        const newTime = new Date(endTime)
+                        newTime.setHours(hours, minutes, 0, 0)
+                        setEndTime(newTime)
+                        if (newTime && startTime && newTime > startTime) {
+                          const diffMs = newTime - startTime
+                          const diffHours = diffMs / (1000 * 60 * 60)
+                          const hours = Math.floor(diffHours)
+                          const minutes = Math.floor((diffHours - hours) * 60)
+                          setDuration(`${hours}h ${minutes}m`)
+                        }
+                      }}
+                      className="form-input time-input time-input-mobile"
+                    />
+                    <DatePicker
+                      id="end-time"
+                      selected={endTime}
+                      onChange={(time) => {
+                        setEndTime(time)
+                        if (time && startTime && time > startTime) {
+                          const diffMs = time - startTime
+                          const diffHours = diffMs / (1000 * 60 * 60)
+                          const hours = Math.floor(diffHours)
+                          const minutes = Math.floor((diffHours - hours) * 60)
+                          setDuration(`${hours}h ${minutes}m`)
+                        }
+                      }}
+                      showTimeSelect
+                      showTimeSelectOnly
+                      timeIntervals={15}
+                      timeCaption="Time"
+                      dateFormat="h:mm aa"
+                      className="form-input time-input time-input-desktop"
+                      portalId="root"
+                    />
+                  </div>
                 </div>
 
                 <div className="form-group compact">

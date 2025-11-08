@@ -128,10 +128,39 @@
   font-size: 0.85rem;
 }
 
+.time-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.time-input-mobile {
+  display: block;
+}
+
+.time-input-desktop {
+  display: none;
+}
+
 .time-input,
 .duration-input {
   font-size: 0.95rem;
   padding: 10px;
+  width: 100%;
+}
+
+.time-input-mobile {
+  font-size: 1rem;
+  padding: 12px;
+  min-height: 44px; /* Better touch target on mobile */
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.time-input-mobile::-webkit-calendar-picker-indicator {
+  opacity: 1;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 4px;
 }
 
 /* Task Name with Prefix Buttons */
@@ -167,7 +196,7 @@
 .comment-section {
   display: flex;
   gap: 10px;
-  align-items: flex-end;
+  align-items: flex-start;
   background: white;
   padding: 12px;
   border-radius: 12px;
@@ -182,10 +211,16 @@
   flex: 1;
   margin-bottom: 0;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .comment-group label {
   margin-bottom: 6px;
+  display: block;
+  line-height: 1.4;
+  height: auto;
+  font-size: 0.85rem;
 }
 
 .comment-textarea {
@@ -210,13 +245,13 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-top: 0;
   white-space: normal;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
   line-height: 1.2;
+  margin-top: 2.2rem;
 }
 
 @media (min-width: 1200px) {
@@ -465,6 +500,17 @@
   transform: translateY(0);
 }
 
+@media (min-width: 769px) {
+  /* Desktop/Tablet: Show DatePicker, hide native time input */
+  .time-input-mobile {
+    display: none;
+  }
+  
+  .time-input-desktop {
+    display: block;
+  }
+}
+
 @media (max-width: 1024px) {
   .calendar-section {
     grid-template-columns: 1fr;
@@ -512,13 +558,15 @@
 }
 
 @media (max-width: 768px) {
+  /* Google Calendar-like Mobile Design */
   .timesheet-form-container {
     padding: 0;
+    max-width: 100%;
+    height: 100%;
   }
   
   .timesheet-form-container h2 {
-    font-size: 1.3rem;
-    margin-bottom: 12px;
+    display: none; /* Hide title on mobile for cleaner look */
   }
   
   .form-row {
@@ -526,135 +574,426 @@
   }
   
   .timesheet-form {
-    padding: 12px;
-    border-radius: 8px;
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    box-shadow: none;
+    height: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
   
   .calendar-section {
-    margin-bottom: 15px;
-    gap: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: 0;
   }
   
   .calendar-wrapper {
-    padding: 10px;
+    background: white;
+    padding: 20px 16px;
+    border-radius: 0;
+    box-shadow: none;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .dark-mode .calendar-wrapper {
+    background: #1e293b;
+    border-bottom-color: #334155;
+  }
+  
+  .big-calendar {
+    width: 100%;
   }
   
   .big-calendar .react-datepicker__day {
-    width: 32px;
-    height: 32px;
-    line-height: 32px;
-    font-size: 0.85rem;
+    width: 40px;
+    height: 40px;
+    line-height: 40px;
+    font-size: 0.95rem;
+    margin: 2px;
+    border-radius: 50%;
   }
   
   .big-calendar .react-datepicker__day-name {
-    width: 32px;
-    height: 28px;
-    line-height: 28px;
-    font-size: 0.8rem;
+    width: 40px;
+    height: 32px;
+    line-height: 32px;
+    font-size: 0.85rem;
+    margin: 2px;
+    font-weight: 500;
   }
   
+  .big-calendar .react-datepicker__header {
+    background: transparent;
+    border-bottom: none;
+    padding: 16px 0 8px 0;
+  }
+  
+  .big-calendar .react-datepicker__current-month {
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-bottom: 12px;
+  }
+  
+  .right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    background: white;
+  }
+  
+  .dark-mode .right-column {
+    background: #1e293b;
+  }
+  
+  /* Time Selection - Google Calendar Style */
   .time-selection-panel {
-    padding: 12px;
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    box-shadow: none;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .dark-mode .time-selection-panel {
+    border-bottom-color: #334155;
   }
   
   .time-inputs-grid {
-    gap: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0;
   }
   
+  .form-group.compact {
+    padding: 16px;
+    border-bottom: 1px solid #f0f0f0;
+    margin-bottom: 0;
+  }
+  
+  .dark-mode .form-group.compact {
+    border-bottom-color: #334155;
+  }
+  
+  .form-group.compact:last-child {
+    border-bottom: none;
+  }
+  
+  .form-group.compact label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #5f6368;
+    margin-bottom: 8px;
+    display: block;
+  }
+  
+  .dark-mode .form-group.compact label {
+    color: #94a3b8;
+  }
+  
+  .time-input-wrapper {
+    margin-top: 4px;
+  }
+  
+  .time-input-mobile {
+    font-size: 1rem;
+    padding: 0;
+    min-height: 32px;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    cursor: pointer;
+    color: #202124;
+    font-weight: 400;
+    width: 100%;
+  }
+  
+  .dark-mode .time-input-mobile {
+    background: transparent;
+    color: #e0e0e0;
+  }
+  
+  .time-input-mobile:focus {
+    outline: none;
+    border: none;
+    box-shadow: none;
+  }
+  
+  .time-input-mobile::-webkit-calendar-picker-indicator {
+    opacity: 1;
+    cursor: pointer;
+    font-size: 1.3rem;
+    padding: 4px;
+    margin-left: 8px;
+  }
+  
+  /* Duration Display */
+  .duration-hint {
+    margin-top: 8px;
+    font-size: 0.875rem;
+    color: #5f6368;
+    font-weight: 400;
+  }
+  
+  .dark-mode .duration-hint {
+    color: #94a3b8;
+  }
+  
+  /* Task Name - Google Calendar Style */
   .task-name-group {
-    padding: 12px;
+    background: transparent;
+    padding: 16px;
+    border-radius: 0;
+    box-shadow: none;
+    border-bottom: 1px solid #e0e0e0;
+    margin-bottom: 0;
+  }
+  
+  .dark-mode .task-name-group {
+    background: transparent;
+    border-bottom-color: #334155;
+  }
+  
+  .task-name-group label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #5f6368;
+    margin-bottom: 8px;
+  }
+  
+  .dark-mode .task-name-group label {
+    color: #94a3b8;
   }
   
   .task-name-input-wrapper {
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
   }
   
   .prefix-buttons {
     width: 100%;
-    justify-content: space-between;
+    justify-content: flex-start;
+    gap: 8px;
   }
   
   .prefix-btn {
-    flex: 1;
-    padding: 8px 12px;
-    font-size: 0.85rem;
+    flex: 0 0 auto;
+    padding: 8px 16px;
+    font-size: 0.875rem;
+    border-radius: 16px;
+    border: 1px solid #dadce0;
+    background: white;
+    color: #5f6368;
+    font-weight: 500;
   }
   
+  .dark-mode .prefix-btn {
+    background: #1e293b;
+    border-color: #334155;
+    color: #94a3b8;
+  }
+  
+  .prefix-btn.active {
+    background: #1a73e8;
+    border-color: #1a73e8;
+    color: white;
+    box-shadow: none;
+  }
+  
+  .dark-mode .prefix-btn.active {
+    background: #1a73e8;
+    border-color: #1a73e8;
+  }
+  
+  .task-name-input {
+    border: none;
+    border-bottom: 1px solid #e0e0e0;
+    border-radius: 0;
+    padding: 8px 0;
+    font-size: 1rem;
+    background: transparent;
+  }
+  
+  .dark-mode .task-name-input {
+    border-bottom-color: #334155;
+    color: #e0e0e0;
+  }
+  
+  .task-name-input:focus {
+    outline: none;
+    border-bottom: 2px solid #1a73e8;
+    padding-bottom: 7px;
+    box-shadow: none;
+  }
+  
+  .dark-mode .task-name-input:focus {
+    border-bottom-color: #1a73e8;
+  }
+  
+  /* Comment Section - Google Calendar Style */
   .comment-section {
-    padding: 12px;
-    gap: 10px;
+    background: transparent;
+    padding: 16px;
+    border-radius: 0;
+    box-shadow: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .dark-mode .comment-section {
+    background: transparent;
+    border-bottom-color: #334155;
+  }
+  
+  .comment-group {
+    margin-bottom: 0;
+  }
+  
+  .comment-group label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #5f6368;
+    margin-bottom: 8px;
+  }
+  
+  .dark-mode .comment-group label {
+    color: #94a3b8;
   }
   
   .comment-textarea {
     width: 100%;
-    font-size: 0.9rem;
-    height: 70px;
-    min-height: 70px;
-    max-height: 70px;
+    font-size: 1rem;
+    height: auto;
+    min-height: 80px;
+    max-height: 200px;
+    border: none;
+    border-bottom: 1px solid #e0e0e0;
+    border-radius: 0;
+    padding: 8px 0;
+    background: transparent;
+    resize: vertical;
   }
   
+  .dark-mode .comment-textarea {
+    border-bottom-color: #334155;
+    color: #e0e0e0;
+  }
+  
+  .comment-textarea:focus {
+    outline: none;
+    border-bottom: 2px solid #1a73e8;
+    padding-bottom: 7px;
+    box-shadow: none;
+  }
+  
+  .dark-mode .comment-textarea:focus {
+    border-bottom-color: #1a73e8;
+  }
+  
+  /* Submit Button - Google Calendar Style (Bottom Fixed) */
   .submit-btn {
-    width: 70px;
-    min-width: 70px;
-    height: 70px;
-    font-size: 0.8rem;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    min-width: 100%;
+    height: 56px;
+    font-size: 0.875rem;
+    font-weight: 500;
     margin-top: 0;
+    border-radius: 0;
+    background: #1a73e8;
+    color: white;
+    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    letter-spacing: 0.25px;
+  }
+  
+  .dark-mode .submit-btn {
+    background: #1a73e8;
+    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.3);
+  }
+  
+  .submit-btn:hover {
+    background: #1557b0;
+    transform: none;
+    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.15);
+  }
+  
+  .dark-mode .submit-btn:hover {
+    background: #1557b0;
+  }
+  
+  /* Add padding to bottom for fixed button */
+  .timesheet-form {
+    padding-bottom: 72px;
+  }
+  
+  /* Duration Input */
+  .duration-input {
+    border: none;
+    border-bottom: 1px solid #e0e0e0;
+    border-radius: 0;
+    padding: 8px 0;
+    font-size: 1rem;
+    background: transparent;
+  }
+  
+  .dark-mode .duration-input {
+    border-bottom-color: #334155;
+    color: #e0e0e0;
+  }
+  
+  .duration-input:focus {
+    outline: none;
+    border-bottom: 2px solid #1a73e8;
+    padding-bottom: 7px;
+    box-shadow: none;
+  }
+  
+  .dark-mode .duration-input:focus {
+    border-bottom-color: #1a73e8;
   }
 }
 
 @media (max-width: 480px) {
-  .timesheet-form-container h2 {
-    font-size: 1.1rem;
-  }
-  
-  .timesheet-form {
-    padding: 10px;
-  }
-  
+  /* Small mobile adjustments */
   .big-calendar .react-datepicker__day {
-    width: 28px;
-    height: 28px;
-    line-height: 28px;
-    font-size: 0.75rem;
-    margin: 1px;
+    width: 36px;
+    height: 36px;
+    line-height: 36px;
+    font-size: 0.9rem;
+    margin: 2px;
   }
   
   .big-calendar .react-datepicker__day-name {
-    width: 28px;
-    height: 24px;
-    line-height: 24px;
-    font-size: 0.7rem;
-    margin: 1px;
+    width: 36px;
+    height: 30px;
+    line-height: 30px;
+    font-size: 0.8rem;
+    margin: 2px;
   }
   
-  .time-inputs-grid {
-    grid-template-columns: 1fr;
+  .form-group.compact,
+  .task-name-group,
+  .comment-section {
+    padding: 14px;
   }
   
-  .comment-textarea {
-    width: 100%;
-    height: 60px;
-    min-height: 60px;
-    max-height: 60px;
-  }
-  
-  .submit-btn {
-    width: 100%;
-    min-width: 100%;
-    height: 60px;
-    font-size: 0.75rem;
-    margin-top: 10px;
-  }
-  
-  .form-group.compact label {
-    font-size: 0.85rem;
-  }
-  
-  .time-input,
-  .duration-input {
-    font-size: 0.9rem;
-    padding: 8px;
+  .calendar-wrapper {
+    padding: 16px 14px;
   }
 }
 
