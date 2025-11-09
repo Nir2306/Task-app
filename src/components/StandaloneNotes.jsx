@@ -30,6 +30,9 @@ function StandaloneNotes({ tasks = [] }) {
   const [filterCategory, setFilterCategory] = useState('')
   const [sortBy, setSortBy] = useState('newest') // newest, oldest, title
   const [copyMessage, setCopyMessage] = useState(null)
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false)
+  const [showTagDropdown, setShowTagDropdown] = useState(false)
+  const [showSortDropdown, setShowSortDropdown] = useState(false)
 
   // Load notes from database on mount
   useEffect(() => {
@@ -279,41 +282,199 @@ function StandaloneNotes({ tasks = [] }) {
           />
         </div>
         <div className="filters-section">
-          <select
-            value={filterCategory}
-            onChange={(e) => setFilterCategory(e.target.value)}
-            className="filter-select"
-          >
-            <option value="">All Categories</option>
-            {NOTE_CATEGORIES.map(cat => (
-              <option key={cat.id} value={cat.id}>{cat.label}</option>
-            ))}
-            {/* Add custom categories from existing notes */}
-            {Array.from(new Set(notes.map(n => n.category).filter(cat => !NOTE_CATEGORIES.find(c => c.id === cat)))).map(customCat => (
-              <option key={customCat} value={customCat}>📌 {customCat}</option>
-            ))}
-          </select>
+          {/* Category Filter */}
+          <div className="filter-group">
+            <label>Filter by Category:</label>
+            <div className="category-filter-wrapper">
+              <input
+                type="text"
+                value={filterCategory ? (NOTE_CATEGORIES.find(c => c.id === filterCategory)?.label || `📌 ${filterCategory}`) : ''}
+                onChange={(e) => {
+                  const value = e.target.value
+                  // Allow typing to filter
+                  if (!value) {
+                    setFilterCategory('')
+                  }
+                  setShowCategoryDropdown(true)
+                }}
+                onFocus={() => setShowCategoryDropdown(true)}
+                onBlur={() => {
+                  setTimeout(() => setShowCategoryDropdown(false), 200)
+                }}
+                placeholder="All Categories"
+                className="filter-input category-filter-input"
+                readOnly
+              />
+              {showCategoryDropdown && (
+                <div className="category-dropdown">
+                  <button
+                    type="button"
+                    className="category-dropdown-item"
+                    onClick={() => {
+                      setFilterCategory('')
+                      setShowCategoryDropdown(false)
+                    }}
+                  >
+                    All Categories
+                  </button>
+                  {NOTE_CATEGORIES.map(cat => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      className="category-dropdown-item"
+                      onClick={() => {
+                        setFilterCategory(cat.id)
+                        setShowCategoryDropdown(false)
+                      }}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
+                  {/* Add custom categories from existing notes */}
+                  {Array.from(new Set(notes.map(n => n.category).filter(cat => !NOTE_CATEGORIES.find(c => c.id === cat)))).map(customCat => (
+                    <button
+                      key={customCat}
+                      type="button"
+                      className="category-dropdown-item"
+                      onClick={() => {
+                        setFilterCategory(customCat)
+                        setShowCategoryDropdown(false)
+                      }}
+                    >
+                      📌 {customCat}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {filterCategory && (
+                <button 
+                  className="clear-category-btn"
+                  onClick={() => {
+                    setFilterCategory('')
+                    setShowCategoryDropdown(false)
+                  }}
+                  aria-label="Clear category filter"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Tags Filter */}
           {allTags.length > 0 && (
-            <select
-              value={selectedTag}
-              onChange={(e) => setSelectedTag(e.target.value)}
-              className="filter-select"
-            >
-              <option value="">All Tags</option>
-              {allTags.map(tag => (
-                <option key={tag} value={tag}>{tag}</option>
-              ))}
-            </select>
+            <div className="filter-group">
+              <label>Filter by Tag:</label>
+              <div className="tag-filter-wrapper">
+                <input
+                  type="text"
+                  value={selectedTag}
+                  onChange={(e) => {
+                    setSelectedTag(e.target.value)
+                    setShowTagDropdown(true)
+                  }}
+                  onFocus={() => setShowTagDropdown(true)}
+                  onBlur={() => {
+                    setTimeout(() => setShowTagDropdown(false), 200)
+                  }}
+                  placeholder="All Tags"
+                  className="filter-input tag-filter-input"
+                />
+                {showTagDropdown && (
+                  <div className="tag-dropdown">
+                    <button
+                      type="button"
+                      className="tag-dropdown-item"
+                      onClick={() => {
+                        setSelectedTag('')
+                        setShowTagDropdown(false)
+                      }}
+                    >
+                      All Tags
+                    </button>
+                    {allTags.filter(tag => tag.toLowerCase().includes(selectedTag.toLowerCase())).map(tag => (
+                      <button
+                        key={tag}
+                        type="button"
+                        className="tag-dropdown-item"
+                        onClick={() => {
+                          setSelectedTag(tag)
+                          setShowTagDropdown(false)
+                        }}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {selectedTag && (
+                  <button 
+                    className="clear-tag-btn"
+                    onClick={() => {
+                      setSelectedTag('')
+                      setShowTagDropdown(false)
+                    }}
+                    aria-label="Clear tag filter"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
           )}
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="filter-select"
-          >
-            <option value="newest">Newest First</option>
-            <option value="oldest">Oldest First</option>
-            <option value="title">Sort by Title</option>
-          </select>
+
+          {/* Sort Filter */}
+          <div className="filter-group">
+            <label>Sort by:</label>
+            <div className="sort-filter-wrapper">
+              <input
+                type="text"
+                value={sortBy === 'newest' ? 'Newest First' : sortBy === 'oldest' ? 'Oldest First' : 'Sort by Title'}
+                onChange={() => {}}
+                onFocus={() => setShowSortDropdown(true)}
+                onBlur={() => {
+                  setTimeout(() => setShowSortDropdown(false), 200)
+                }}
+                placeholder="Sort by"
+                className="filter-input sort-filter-input"
+                readOnly
+              />
+              {showSortDropdown && (
+                <div className="sort-dropdown">
+                  <button
+                    type="button"
+                    className="sort-dropdown-item"
+                    onClick={() => {
+                      setSortBy('newest')
+                      setShowSortDropdown(false)
+                    }}
+                  >
+                    Newest First
+                  </button>
+                  <button
+                    type="button"
+                    className="sort-dropdown-item"
+                    onClick={() => {
+                      setSortBy('oldest')
+                      setShowSortDropdown(false)
+                    }}
+                  >
+                    Oldest First
+                  </button>
+                  <button
+                    type="button"
+                    className="sort-dropdown-item"
+                    onClick={() => {
+                      setSortBy('title')
+                      setShowSortDropdown(false)
+                    }}
+                  >
+                    Sort by Title
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 

@@ -1,19 +1,20 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import { useTheme } from '../contexts/ThemeContext'
+import { getHolidaysForMonth, isHoliday } from '../utils/mauritianHolidays'
 import './CalendarView.css'
 
 // Color palette for tasks (Google Calendar style)
 const TASK_COLORS = [
   { bg: '#1a73e8', border: '#1557b0', text: 'white' }, // Blue
-  { bg: '#34a853', border: '#2d8f47', text: 'white' }, // Green
   { bg: '#ea4335', border: '#d33b2c', text: 'white' }, // Red
   { bg: '#fbbc04', border: '#e6a003', text: '#202124' }, // Yellow
   { bg: '#9aa0a6', border: '#80868b', text: 'white' }, // Gray
   { bg: '#5f6368', border: '#4e5256', text: 'white' }, // Dark Gray
   { bg: '#9334e6', border: '#7a2bc2', text: 'white' }, // Purple
   { bg: '#ff6d01', border: '#e55d00', text: 'white' }, // Orange
+  { bg: '#00acc1', border: '#00838f', text: 'white' }, // Cyan (replacement for green)
 ]
 
 // Generate consistent color for a task based on its name
@@ -28,13 +29,14 @@ const getTaskColor = (taskName) => {
   return TASK_COLORS[index]
 }
 
-function CalendarView({ tasks = [], onAddTask, onEditTask, onDeleteTask }) {
+function CalendarView({ tasks = [], onAddTask, onEditTask, onDeleteTask, onModalStateChange }) {
   const { darkMode } = useTheme()
   const [currentDate, setCurrentDate] = useState(new Date())
   const [viewMode, setViewMode] = useState('day') // 'day', 'month', 'list'
   const [selectedTimeSlot, setSelectedTimeSlot] = useState(null)
   const [showTaskForm, setShowTaskForm] = useState(false)
   const [editingTask, setEditingTask] = useState(null) // Track which task is being edited
+  const [showTodayOnly, setShowTodayOnly] = useState(false) // Filter to show only today's tasks
   const [formData, setFormData] = useState({
     date: new Date(),
     startTime: new Date(),
@@ -44,6 +46,13 @@ function CalendarView({ tasks = [], onAddTask, onEditTask, onDeleteTask }) {
     duration: ''
   })
   const [selectedPrefix, setSelectedPrefix] = useState(null)
+  
+  // Notify parent when modal state changes
+  useEffect(() => {
+    if (onModalStateChange) {
+      onModalStateChange(showTaskForm)
+    }
+  }, [showTaskForm, onModalStateChange])
 
   // Generate time slots (24 hours, every 30 minutes)
   const timeSlots = useMemo(() => {
@@ -59,11 +68,34 @@ function CalendarView({ tasks = [], onAddTask, onEditTask, onDeleteTask }) {
   const getTasksForDate = (date) => {
     if (!date) return []
     const dateStr = date.toISOString().split('T')[0]
-    return tasks.filter(task => {
+    let filteredTasks = tasks.filter(task => {
       if (!task.date) return false
       const taskDate = new Date(task.date).toISOString().split('T')[0]
       return taskDate === dateStr
     })
+    
+    // If "Today" filter is active, only show tasks for today
+    if (showTodayOnly) {
+      const todayStr = new Date().toISOString().split('T')[0]
+      if (dateStr !== todayStr) {
+        return []
+      }
+    }
+    
+    return filteredTasks
+  }
+  
+  // Get filtered tasks for list view
+  const getFilteredTasks = () => {
+    if (showTodayOnly) {
+      const todayStr = new Date().toISOString().split('T')[0]
+      return tasks.filter(task => {
+        if (!task.date) return false
+        const taskDate = new Date(task.date).toISOString().split('T')[0]
+        return taskDate === todayStr
+      })
+    }
+    return tasks
   }
 
   // Get tasks that should be displayed in a time slot (tasks that start at or span across this slot)
@@ -241,12 +273,13 @@ function CalendarView({ tasks = [], onAddTask, onEditTask, onDeleteTask }) {
     setCurrentDate(newDate)
   }
   
-  // Get today's date in short format
+  // Get today's date in full format
   const getTodayDate = () => {
     return new Date().toLocaleDateString('en-US', { 
-      weekday: 'short', 
-      month: 'short', 
-      day: 'numeric' 
+      weekday: 'long', 
+      month: 'long', 
+      day: 'numeric',
+      year: 'numeric'
     })
   }
 
@@ -256,16 +289,24 @@ function CalendarView({ tasks = [], onAddTask, onEditTask, onDeleteTask }) {
 
   // Render Day View
   const renderDayView = () => {
+    const holiday = isHoliday(currentDate)
     return (
       <div className="calendar-day-view">
-        <div className="calendar-time-column">
-          {timeSlots.map((slot, index) => (
-            <div key={index} className="time-slot-label">
-              {index % 2 === 0 && <span>{slot}</span>}
-            </div>
-          ))}
-        </div>
-        <div className="calendar-day-column">
+        {holiday && (
+          <div className="day-view-holiday-banner">
+            <span className="holiday-icon">🎉</span>
+            <span className="holiday-text">{holiday.name}</span>
+          </div>
+        )}
+        <div className="calendar-day-view-content">
+          <div className="calendar-time-column">
+            {timeSlots.map((slot, index) => (
+              <div key={index} className="time-slot-label">
+                {index % 2 === 0 && <span>{slot}</span>}
+              </div>
+            ))}
+          </div>
+          <div className="calendar-day-column">
               {timeSlots.map((slot, index) => {
                 const tasksAtSlot = getTasksForTimeSlot(currentDate, slot)
                 return (
@@ -303,12 +344,13 @@ function CalendarView({ tasks = [], onAddTask, onEditTask, onDeleteTask }) {
                       )
                     })}
                   </div>
-                )
-              })}
+                 )
+               })}
+          </div>
         </div>
       </div>
-    )
-  }
+     )
+   }
 
 
   // Render Month View
@@ -319,6 +361,9 @@ function CalendarView({ tasks = [], onAddTask, onEditTask, onDeleteTask }) {
     const lastDay = new Date(year, month + 1, 0)
     const daysInMonth = lastDay.getDate()
     const startingDayOfWeek = firstDay.getDay()
+
+    // Get holidays for this month
+    const holidays = getHolidaysForMonth(year, month)
 
     const days = []
     // Add empty cells for days before month starts
@@ -331,62 +376,90 @@ function CalendarView({ tasks = [], onAddTask, onEditTask, onDeleteTask }) {
     }
 
     return (
-      <div className="calendar-month-view">
-        <div className="month-grid">
-          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-            <div key={day} className="month-day-header">{day}</div>
-          ))}
-          {days.map((date, index) => {
-            const tasksForDate = getTasksForDate(date)
-            return (
-              <div
-                key={index}
-                className={`month-day-cell ${date ? '' : 'empty'} ${date && date.toDateString() === new Date().toDateString() ? 'today' : ''}`}
-                onClick={() => {
-                  if (date) {
-                    setCurrentDate(date)
-                    setViewMode('day')
-                  }
-                }}
-              >
-                {date && (
-                  <>
-                    <div className="month-day-number">{date.getDate()}</div>
-                    <div className="month-day-tasks">
-                      {tasksForDate.slice(0, 5).map((task, taskIndex) => {
-                        const taskColor = getTaskColor(task.taskName)
-                        return (
-                          <div
-                            key={taskIndex}
-                            className="month-task-item"
-                            style={{ backgroundColor: taskColor.bg }}
-                            title={`${new Date(task.startTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} - ${task.taskName}`}
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleTaskClick(task, e)
-                            }}
-                          >
-                            {task.taskName}
-                          </div>
-                        )
-                      })}
-                      {tasksForDate.length > 5 && (
-                        <div className="month-task-more">+{tasksForDate.length - 5} more</div>
+      <div className="calendar-month-container">
+        <div className="calendar-month-view">
+          <div className="month-grid">
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+              <div key={day} className="month-day-header">{day}</div>
+            ))}
+            {days.map((date, index) => {
+              const tasksForDate = getTasksForDate(date)
+              const holiday = date ? isHoliday(date) : null
+              return (
+                <div
+                  key={index}
+                  className={`month-day-cell ${date ? '' : 'empty'} ${date && date.toDateString() === new Date().toDateString() ? 'today' : ''} ${holiday ? 'holiday-day' : ''}`}
+                  onClick={() => {
+                    if (date) {
+                      setCurrentDate(date)
+                      setViewMode('day')
+                    }
+                  }}
+                >
+                  {date && (
+                    <>
+                      <div className="month-day-number">{date.getDate()}</div>
+                      {holiday && (
+                        <div className="holiday-indicator" title={holiday.name}>
+                          🎉
+                        </div>
                       )}
-                    </div>
-                  </>
-                )}
-              </div>
-            )
-          })}
+                      <div className="month-day-tasks">
+                        {tasksForDate.slice(0, holiday ? 4 : 5).map((task, taskIndex) => {
+                          const taskColor = getTaskColor(task.taskName)
+                          return (
+                            <div
+                              key={taskIndex}
+                              className="month-task-item"
+                              style={{ backgroundColor: taskColor.bg }}
+                              title={`${new Date(task.startTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} - ${task.taskName}`}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleTaskClick(task, e)
+                              }}
+                            >
+                              {task.taskName}
+                            </div>
+                          )
+                        })}
+                        {tasksForDate.length > (holiday ? 4 : 5) && (
+                          <div className="month-task-more">+{tasksForDate.length - (holiday ? 4 : 5)} more</div>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )
+            })}
+          </div>
         </div>
+        {holidays.length > 0 && (
+          <div className="month-holidays-section">
+            <h3 className="holidays-title">Public Holidays This Month</h3>
+            <div className="holidays-list">
+              {holidays.map((holiday, index) => (
+                <div key={index} className="holiday-item">
+                  <span className="holiday-date">
+                    {new Date(holiday.date).toLocaleDateString('en-US', { 
+                      weekday: 'short', 
+                      month: 'short', 
+                      day: 'numeric' 
+                    })}
+                  </span>
+                  <span className="holiday-name">{holiday.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     )
   }
 
   // Render List View
   const renderListView = () => {
-    const sortedTasks = [...tasks].sort((a, b) => {
+    const filteredTasks = getFilteredTasks()
+    const sortedTasks = [...filteredTasks].sort((a, b) => {
       const dateA = new Date(a.date || a.startTime)
       const dateB = new Date(b.date || b.startTime)
       return dateB - dateA
@@ -436,27 +509,48 @@ function CalendarView({ tasks = [], onAddTask, onEditTask, onDeleteTask }) {
       {/* Header with Navigation */}
       <div className="calendar-header">
         <div className="calendar-nav-left">
-          <button className="calendar-nav-btn" onClick={goToToday}>Today</button>
+          <button 
+            className={`calendar-nav-btn ${showTodayOnly ? 'active' : ''}`}
+            onClick={() => {
+              if (viewMode === 'list') {
+                setShowTodayOnly(!showTodayOnly)
+              } else {
+                goToToday()
+              }
+            }}
+          >
+            Today
+          </button>
           <div className="calendar-nav-arrows">
             <button className="calendar-nav-arrow" onClick={() => navigateDate(-1)}>‹</button>
             <button className="calendar-nav-arrow" onClick={() => navigateDate(1)}>›</button>
           </div>
-          <div className="calendar-date-display">
-            {viewMode === 'day' && currentDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-            {viewMode === 'month' && currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-            {viewMode === 'list' && 'All Tasks'}
+          <div className="calendar-task-count">
+            {viewMode === 'list' ? (
+              <span>{getFilteredTasks().length} {getFilteredTasks().length === 1 ? 'task' : 'tasks'}</span>
+            ) : viewMode === 'day' ? (
+              <span>{getTasksForDate(currentDate).length} {getTasksForDate(currentDate).length === 1 ? 'task' : 'tasks'}</span>
+            ) : (
+              <span>{getTasksForDate(currentDate).length} {getTasksForDate(currentDate).length === 1 ? 'task' : 'tasks'}</span>
+            )}
           </div>
         </div>
         <div className="calendar-view-switcher">
           <button
             className={`view-switch-btn ${viewMode === 'day' ? 'active' : ''}`}
-            onClick={() => setViewMode('day')}
+            onClick={() => {
+              setViewMode('day')
+              setShowTodayOnly(false)
+            }}
           >
             Day
           </button>
           <button
             className={`view-switch-btn ${viewMode === 'month' ? 'active' : ''}`}
-            onClick={() => setViewMode('month')}
+            onClick={() => {
+              setViewMode('month')
+              setShowTodayOnly(false)
+            }}
           >
             Month
           </button>

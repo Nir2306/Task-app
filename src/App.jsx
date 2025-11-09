@@ -35,6 +35,7 @@ function AppContent() {
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
   const { darkMode, toggleDarkMode } = useTheme()
 
   // Initialize offline storage
@@ -228,6 +229,8 @@ function AppContent() {
                 className="hamburger-menu-btn"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 aria-label="Toggle menu"
+                disabled={isTaskModalOpen}
+                style={{ opacity: isTaskModalOpen ? 0.5 : 1, pointerEvents: isTaskModalOpen ? 'none' : 'auto' }}
               >
                 <span className="hamburger-line"></span>
                 <span className="hamburger-line"></span>
@@ -235,7 +238,7 @@ function AppContent() {
               </button>
             )}
             <div className="header-title-section">
-              <h1>Timesheet Tracker</h1>
+              <h1>Task Tracker</h1>
               <p className="header-subtitle">Track your daily activities and time</p>
               {username && (
                 <p className="user-greeting">
@@ -264,18 +267,18 @@ function AppContent() {
         <button 
           className={`nav-btn ${activeTab === 'entry' ? 'active' : ''}`}
           onClick={() => handleTabChange('entry')}
-          aria-label="Add Entry"
+          aria-label="New Task"
           aria-current={activeTab === 'entry' ? 'page' : undefined}
         >
-          Add Entry
+          New Task
         </button>
         <button 
           className={`nav-btn ${activeTab === 'list' ? 'active' : ''}`}
           onClick={() => handleTabChange('list')}
-          aria-label="All Entries"
+          aria-label="Task List"
           aria-current={activeTab === 'list' ? 'page' : undefined}
         >
-          All Entries
+          Task List
         </button>
         <button 
           className={`nav-btn ${activeTab === 'dashboard' ? 'active' : ''}`}
@@ -296,10 +299,10 @@ function AppContent() {
         <button 
           className={`nav-btn ${activeTab === 'notes' ? 'active' : ''}`}
           onClick={() => handleTabChange('notes')}
-          aria-label="Notes"
+          aria-label="My Notes"
           aria-current={activeTab === 'notes' ? 'page' : undefined}
         >
-          Notes
+          My Notes
         </button>
       </nav>
 
@@ -320,18 +323,18 @@ function AppContent() {
             <button 
               className={`mobile-nav-item ${activeTab === 'entry' ? 'active' : ''}`}
               onClick={() => handleTabChange('entry')}
-              aria-label="Add Entry"
+              aria-label="New Task"
               aria-current={activeTab === 'entry' ? 'page' : undefined}
             >
-              <span className="nav-label">Add Entry</span>
+              <span className="nav-label">New Task</span>
             </button>
             <button 
               className={`mobile-nav-item ${activeTab === 'list' ? 'active' : ''}`}
               onClick={() => handleTabChange('list')}
-              aria-label="All Entries"
+              aria-label="Task List"
               aria-current={activeTab === 'list' ? 'page' : undefined}
             >
-              <span className="nav-label">All Entries</span>
+              <span className="nav-label">Task List</span>
             </button>
             <button 
               className={`mobile-nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
@@ -352,10 +355,10 @@ function AppContent() {
             <button 
               className={`mobile-nav-item ${activeTab === 'notes' ? 'active' : ''}`}
               onClick={() => handleTabChange('notes')}
-              aria-label="Notes"
+              aria-label="My Notes"
               aria-current={activeTab === 'notes' ? 'page' : undefined}
             >
-              <span className="nav-label">Notes</span>
+              <span className="nav-label">My Notes</span>
             </button>
             <button 
               className="mobile-nav-item mobile-logout-btn"
@@ -379,6 +382,7 @@ function AppContent() {
               onAddTask={handleAddTask}
               onEditTask={handleEditTask}
               onDeleteTask={handleDeleteTask}
+              onModalStateChange={setIsTaskModalOpen}
             />
           ) : (
             <TimesheetForm onAddTask={handleAddTask} />

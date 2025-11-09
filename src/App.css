@@ -126,7 +126,8 @@
   border: none;
   cursor: pointer;
   padding: 0;
-  z-index: 10001;
+  z-index: 10002;
+  position: relative;
   transition: transform 0.3s ease;
 }
 
@@ -214,6 +215,7 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
+  position: relative;
 }
 
 .app-main.no-scroll {
@@ -244,7 +246,6 @@
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.3s ease, visibility 0.3s ease;
-  backdrop-filter: blur(4px);
 }
 
 .mobile-menu-overlay.open {

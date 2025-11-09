@@ -106,7 +106,7 @@ function TimesheetForm({ onAddTask }) {
 
   return (
     <div className="timesheet-form-container">
-      <h2>Add Time Entry</h2>
+      <h2>New Task</h2>
       {successMessage && (
         <div className="success-message-toast">
           <span className="success-icon">✓</span>

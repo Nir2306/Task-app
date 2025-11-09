@@ -106,19 +106,37 @@ function NameGenerator() {
 
   return (
     <div className="name-generator-container">
-      <h2>🎲 French Name Generator</h2>
+      <h2>🎲 Name Generator</h2>
 
       <div className="generator-controls">
         <div className="count-selector">
           <label>Number of names:</label>
-          <input
-            type="number"
-            min="1"
-            max="50"
-            value={count}
-            onChange={(e) => setCount(Math.min(50, Math.max(1, parseInt(e.target.value) || 1)))}
-            className="count-input"
-          />
+          <div className="count-input-wrapper">
+            <button
+              type="button"
+              className="count-btn count-decrement"
+              onClick={() => setCount(Math.max(1, count - 1))}
+              aria-label="Decrease count"
+            >
+              −
+            </button>
+            <input
+              type="number"
+              min="1"
+              max="50"
+              value={count}
+              onChange={(e) => setCount(Math.min(50, Math.max(1, parseInt(e.target.value) || 1)))}
+              className="count-input"
+            />
+            <button
+              type="button"
+              className="count-btn count-increment"
+              onClick={() => setCount(Math.min(50, count + 1))}
+              aria-label="Increase count"
+            >
+              +
+            </button>
+          </div>
         </div>
         <button
           onClick={handleGenerate}
@@ -224,7 +242,7 @@ function NameGenerator() {
 
       {generatedNames.length === 0 && favorites.length === 0 && (
         <div className="empty-state">
-            <p>Click "Generate Names" to start generating random French names!</p>
+            <p>Click "Generate Names" to start generating random names!</p>
         </div>
       )}
     </div>

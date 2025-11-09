@@ -115,6 +115,27 @@ code {
   background: white !important;
 }
 
+/* Make clock icons white in dark mode for time picker */
+.dark-mode .react-datepicker__input-container::before,
+.dark-mode .react-datepicker__input-container::after,
+.dark-mode .react-datepicker__time-icon,
+.dark-mode .react-datepicker__time-icon svg,
+.dark-mode .react-datepicker__time-icon path,
+.dark-mode .react-datepicker__time-icon circle,
+.dark-mode .react-datepicker__time-icon line,
+.dark-mode .react-datepicker-wrapper svg,
+.dark-mode .react-datepicker-wrapper path,
+.dark-mode .react-datepicker-wrapper circle,
+.dark-mode .react-datepicker-wrapper line,
+.dark-mode .react-datepicker__input-container svg,
+.dark-mode .react-datepicker__input-container svg path,
+.dark-mode .react-datepicker__input-container svg circle,
+.dark-mode .react-datepicker__input-container svg line {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
 /* Dark mode time list items - keep black text on white background */
 .dark-mode .react-datepicker__time-list-item {
   color: #000 !important;

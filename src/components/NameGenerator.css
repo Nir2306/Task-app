@@ -37,19 +37,132 @@
   color: #495057;
 }
 
+.count-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
 .count-input {
   width: 80px;
   padding: 10px;
   border: 2px solid #dee2e6;
-  border-radius: 8px;
+  border-radius: 0;
   font-size: 1rem;
   text-align: center;
+  border-left: none;
+  border-right: none;
+  height: 40px;
+  box-sizing: border-box;
+}
+
+.count-btn {
+  width: 40px;
+  height: 40px;
+  border: 2px solid #dee2e6;
+  background: white;
+  color: #495057;
+  font-size: 1.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  user-select: none;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.count-decrement {
+  border-radius: 8px 0 0 8px;
+  border-right: none;
+}
+
+.count-increment {
+  border-radius: 0 8px 8px 0;
+  border-left: none;
+}
+
+.count-btn:hover {
+  background: #f8f9fa;
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.count-btn:active {
+  background: #e9ecef;
+  transform: scale(0.95);
+}
+
+.dark-mode .count-btn {
+  background: #1e293b;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+.dark-mode .count-btn:hover {
+  background: #0f172a;
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.dark-mode .count-input {
+  background: #1e293b;
+  border-color: #334155;
+  color: #e0e0e0;
 }
 
 .count-input:focus {
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.count-input:focus + .count-increment {
+  border-color: #3b82f6;
+}
+
+.count-decrement:focus ~ .count-input {
+  border-color: #3b82f6;
+}
+
+/* Mobile: Show increment/decrement buttons */
+@media (max-width: 768px) {
+  .count-btn {
+    display: flex;
+    width: 56px;
+    height: 48px;
+    font-size: 1.8rem;
+  }
+
+  .count-input {
+    width: 80px;
+    height: 48px;
+    border-left: 2px solid #dee2e6;
+    border-right: 2px solid #dee2e6;
+    padding: 0;
+    font-size: 1.1rem;
+    line-height: 48px;
+  }
+
+  .dark-mode .count-input {
+    border-left-color: #334155;
+    border-right-color: #334155;
+  }
+
+  .count-input:focus {
+    border-left-color: #3b82f6;
+    border-right-color: #3b82f6;
+  }
+
+  .count-input:focus + .count-increment {
+    border-color: #3b82f6;
+  }
+
+  .count-decrement:focus ~ .count-input {
+    border-left-color: #3b82f6;
+  }
 }
 
 .generate-btn {

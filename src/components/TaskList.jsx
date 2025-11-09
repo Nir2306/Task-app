@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import { exportToExcel } from '../utils/excelExport'
@@ -10,6 +10,37 @@ function TaskList({ tasks, onDeleteTask, onEditTask }) {
   const [editingId, setEditingId] = useState(null)
   const [editForm, setEditForm] = useState({})
   const [copyMessage, setCopyMessage] = useState(null)
+  const [showTaskDropdown, setShowTaskDropdown] = useState(false)
+  
+  // Get unique task names for dropdown, sorted by most recent creation date (descending)
+  const uniqueTaskNames = useMemo(() => {
+    const taskMap = new Map()
+    
+    // Group tasks by name and track the most recent creation date for each
+    tasks.forEach(task => {
+      if (!task.taskName) return
+      
+      const existing = taskMap.get(task.taskName)
+      const taskDate = new Date(task.createdAt || task.date || 0)
+      
+      if (!existing || taskDate > existing.latestDate) {
+        taskMap.set(task.taskName, {
+          name: task.taskName,
+          latestDate: taskDate
+        })
+      }
+    })
+    
+    // Convert to array and sort by latest date (descending - newest first)
+    return Array.from(taskMap.values())
+      .sort((a, b) => b.latestDate - a.latestDate)
+      .map(item => item.name)
+  }, [tasks])
+  
+  // Filter task names based on input
+  const filteredTaskNames = uniqueTaskNames.filter(name =>
+    name.toLowerCase().includes(filterTaskName.toLowerCase())
+  )
 
   const filteredTasks = tasks.filter(task => {
     if (filterDate) {
@@ -71,7 +102,7 @@ function TaskList({ tasks, onDeleteTask, onEditTask }) {
   return (
     <div className="task-list-container">
       <div className="task-list-header">
-        <h2>All Time Entries</h2>
+        <h2>Task List</h2>
         <button onClick={handleExport} className="export-btn">
           Export to Excel
         </button>
@@ -80,24 +111,75 @@ function TaskList({ tasks, onDeleteTask, onEditTask }) {
       <div className="filters">
         <div className="filter-group">
           <label>Filter by Date:</label>
-          <DatePicker
-            selected={filterDate}
-            onChange={(date) => setFilterDate(date)}
-            dateFormat="MMMM d, yyyy"
-            className="filter-input"
-            isClearable
-            placeholderText="Select date..."
-          />
+          <div className="date-filter-wrapper">
+            <DatePicker
+              selected={filterDate}
+              onChange={(date) => setFilterDate(date)}
+              dateFormat="MMMM d, yyyy"
+              className="filter-input date-picker-input"
+              isClearable
+              placeholderText="Select date..."
+              calendarClassName="mobile-date-picker"
+            />
+            {filterDate && (
+              <button 
+                className="clear-date-btn"
+                onClick={() => setFilterDate(null)}
+                aria-label="Clear date filter"
+              >
+                ✕
+              </button>
+            )}
+          </div>
         </div>
         <div className="filter-group">
           <label>Filter by Task:</label>
-          <input
-            type="text"
-            value={filterTaskName}
-            onChange={(e) => setFilterTaskName(e.target.value)}
-            placeholder="Search task name..."
-            className="filter-input"
-          />
+          <div className="task-filter-wrapper">
+            <input
+              type="text"
+              value={filterTaskName}
+              onChange={(e) => {
+                setFilterTaskName(e.target.value)
+                setShowTaskDropdown(true)
+              }}
+              onFocus={() => setShowTaskDropdown(true)}
+              onBlur={() => {
+                // Delay to allow dropdown click
+                setTimeout(() => setShowTaskDropdown(false), 200)
+              }}
+              placeholder="Search or select task name..."
+              className="filter-input task-filter-input"
+            />
+            {showTaskDropdown && filteredTaskNames.length > 0 && (
+              <div className="task-dropdown">
+                {filteredTaskNames.map((taskName, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    className="task-dropdown-item"
+                    onClick={() => {
+                      setFilterTaskName(taskName)
+                      setShowTaskDropdown(false)
+                    }}
+                  >
+                    {taskName}
+                  </button>
+                ))}
+              </div>
+            )}
+            {filterTaskName && (
+              <button 
+                className="clear-task-btn"
+                onClick={() => {
+                  setFilterTaskName('')
+                  setShowTaskDropdown(false)
+                }}
+                aria-label="Clear task filter"
+              >
+                ✕
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

@@ -333,12 +333,15 @@ function Dashboard({ tasks = [] }) {
         display: true,
         position: 'right',
         labels: {
-          color: darkMode ? '#e0e0e0' : '#333',
+          color: '#000000',
           font: {
-            size: 12
+            size: 12,
+            weight: 'bold'
           },
           padding: 15,
-          usePointStyle: true
+          usePointStyle: true,
+          boxWidth: 12,
+          boxHeight: 12
         }
       },
       tooltip: {
@@ -407,6 +410,7 @@ function Dashboard({ tasks = [] }) {
     <div className="dashboard-container" style={{ background: darkMode ? 'transparent' : 'transparent', minHeight: '100%', position: 'relative', zIndex: 1000, width: '100%' }}>
       <h2 style={{ color: darkMode ? '#e0e0e0' : '#333', marginBottom: '30px', fontSize: '1.8rem', fontWeight: '700', display: 'block' }}>Dashboard</h2>
 
+      {/* Stats grid - compact horizontal on mobile */}
       <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '40px' }}>
         <div className="stat-card">
           <div className="stat-info">
@@ -434,6 +438,7 @@ function Dashboard({ tasks = [] }) {
         </div>
       </div>
 
+      {/* Chart section */}
       <div className="chart-section">
         <div className="chart-header">
           <h3 style={{ color: darkMode ? '#000000' : '#333', fontWeight: '700', fontSize: '1.5rem' }}>Data Visualization</h3>
