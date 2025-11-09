@@ -1,11 +1,15 @@
-# 📊 Timesheet Tracker
+# 📊 Task Tracker
 
-A modern, full-featured web application for tracking your daily activities and time. Built with React, Firebase, and modern web technologies. Features cloud sync, offline support, and a beautiful mobile-responsive interface.
+A modern, full-featured web application for tracking your daily activities and time. Built with React, Firebase, and modern web technologies. Features cloud sync, offline support, Mauritian public holidays integration, and a beautiful mobile-responsive interface.
 
 ## ✨ Features
 
 ### Core Functionality
-- **📅 Calendar Integration**: Select dates and times easily with intuitive date/time pickers
+- **📅 Calendar Integration**: 
+  - Desktop: Traditional form-based entry with calendar picker
+  - Mobile: Google Calendar-style interface with Day, Month, and List views
+  - Click any time slot to create tasks
+  - Color-coded tasks with duration highlighting
 - **⏱️ Time Tracking**: Add task entries with name, duration, and optional comments
 - **📋 Task Management**: View, edit, and delete all your time entries with advanced filtering
 - **📈 Visual Dashboards**: 
@@ -13,7 +17,13 @@ A modern, full-featured web application for tracking your daily activities and t
   - Time series overview (Daily/Weekly/Monthly views)
   - Top tasks by hours (Bar chart)
   - Summary statistics
+  - Compact, optimized chart heights
 - **📥 Excel Export**: Export all your timesheet data to Excel format
+- **🇲🇺 Mauritian Public Holidays**: 
+  - Automatic holiday detection and display
+  - Holiday days highlighted in green in month view
+  - Holiday banner shown in day view
+  - Complete list of holidays displayed below month calendar
 
 ### Authentication & Storage
 - **🔐 Firebase Authentication**: Secure email/password and Google Sign-In
@@ -22,13 +32,19 @@ A modern, full-featured web application for tracking your daily activities and t
 - **🔄 Hybrid Storage**: Seamless sync when connection is restored
 
 ### Additional Features
-- **📝 Notes**: Standalone notes system with categories, tags, and task linking
-- **🎲 Name Generator**: French name generator for creative projects
+- **📝 Notes**: 
+  - Rich text editor with formatting options (bold, italic, bullets, colors, etc.)
+  - Standalone notes system with categories, tags, and task linking
+  - Auto-save functionality
+  - Search and filter capabilities
+- **🎲 Name Generator**: Name generator for creative projects with favorites
 - **🌙 Dark Mode**: Beautiful dark theme with smooth transitions
 - **📱 Mobile Optimized**: 
+  - Google Calendar-style interface for task management
   - Hamburger menu navigation
   - Touch-friendly interface
   - Responsive design for all screen sizes
+  - Optimized month calendar view
 - **🌐 Network Status**: Real-time connection status indicator
 - **📲 Progressive Web App (PWA)**: 
   - Install as a mobile app on Android and iOS
@@ -100,16 +116,21 @@ npm run preview
 
 ### Time Tracking
 1. **Add Time Entry**: 
-   - Click on "Add Entry" tab (or use hamburger menu on mobile)
-   - Select date from calendar and time (start/end time or duration)
-   - Use NFX/NEX prefix buttons for task categorization
-   - Enter task name (required)
-   - Add optional comment
-   - Click "Add Entry"
+   - **Desktop**: Click on "New Task" tab
+     - Select date from calendar and time (start/end time or duration)
+     - Use NFX/NEX prefix buttons for task categorization
+     - Enter task name (required)
+     - Add optional comment
+     - Click "Add Entry"
+   - **Mobile**: Click on "New Task" tab
+     - Google Calendar-style interface
+     - Click any time slot to create a task
+     - Switch between Day, Month, and List views
+     - Tasks are color-coded and show duration
 
 2. **View All Entries**:
-   - Click on "All Entries" tab
-   - Filter by date or task name
+   - Click on "Task List" tab
+   - Filter by date or task name (with dropdown suggestions)
    - Edit or delete entries as needed
    - Export to Excel when ready
 
@@ -118,13 +139,15 @@ npm run preview
    - See visual charts and statistics
    - Switch between Daily/Weekly/Monthly views
    - View time breakdown by task
+   - Compact chart heights for better viewing
 
 ### Notes
-- Click on "Notes" tab
+- Click on "My Notes" tab
+- Rich text editor with formatting options (bold, italic, underline, bullets, colors, etc.)
 - Create notes with categories (Reminder, Code, To-Do, Links, Important)
 - Link notes to specific tasks
-- Search and filter notes
-- Auto-save functionality
+- Search and filter notes by category, tag, or content
+- Auto-save functionality while editing
 
 ### Mobile Navigation
 - Tap the hamburger menu (☰) icon in the top-left corner
@@ -138,6 +161,8 @@ npm run preview
 - **Firebase** - Authentication and Firestore database
 - **Chart.js** - Data visualization
 - **react-datepicker** - Date and time selection
+- **react-quill** - Rich text editor for notes
+- **lottie-react** - Lottie animations for offline indicator
 - **xlsx** - Excel export functionality
 - **IndexedDB** - Local offline storage
 
@@ -179,12 +204,15 @@ These are automatically included in the build and enable PWA installation.
 - Use NFX/NEX prefix buttons to categorize tasks quickly
 - Data syncs automatically between devices when online
 - Works completely offline - all data is stored locally
-- Use filters in the "All Entries" view to find specific tasks or dates quickly
+- Use filters in the "Task List" view to find specific tasks or dates quickly (dropdown suggestions available)
 - Export your data regularly to keep a backup
 - Dark mode can be toggled from the header
 - Network status indicator shows your connection state and pending sync operations
 - Install the app on your mobile device for quick access and offline use
-- Calendar and form sections are perfectly aligned for better visual balance
+- **Mauritian Public Holidays**: Holiday days are highlighted in green in the month view calendar
+- **Mobile Calendar**: Use the Google Calendar-style interface on mobile for intuitive task management
+- **Rich Text Notes**: Format your notes with bold, italic, bullets, and colors for better organization
+- Tasks are automatically color-coded (green is reserved for holidays)
 
 ## 📱 Mobile Features
 
